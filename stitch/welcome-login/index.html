@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kindred - Welcome</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "inverse-surface": "#31302d",
+                    "on-primary-container": "#fffbff",
+                    "primary-fixed-dim": "#ffb4a5",
+                    "secondary": "#5a614a",
+                    "surface-container-high": "#ebe8e3",
+                    "primary-fixed": "#ffdad3",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f3f0eb",
+                    "primary-container": "#bd5541",
+                    "surface": "#fcf9f4",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#56423e",
+                    "outline": "#89726d",
+                    "surface-variant": "#e5e2dd",
+                    "on-error": "#ffffff",
+                    "tertiary": "#615c4e",
+                    "on-primary-fixed-variant": "#802919",
+                    "surface-bright": "#fcf9f4",
+                    "on-secondary-container": "#5e664e",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed": "#171e0b",
+                    "error": "#ba1a1a",
+                    "secondary-fixed-dim": "#c2caad",
+                    "on-secondary-fixed-variant": "#424a33",
+                    "tertiary-fixed": "#eae2d0",
+                    "on-background": "#1c1c19",
+                    "outline-variant": "#ddc0bb",
+                    "tertiary-container": "#7a7465",
+                    "on-primary-fixed": "#3f0400",
+                    "secondary-fixed": "#dee6c8",
+                    "surface-container-low": "#f6f3ee",
+                    "surface-dim": "#dcdad5",
+                    "on-surface": "#1c1c19",
+                    "primary": "#9d3d2c",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#f0ede9",
+                    "background": "#fcf9f4",
+                    "secondary-container": "#dbe3c5",
+                    "tertiary-fixed-dim": "#cec6b5",
+                    "on-tertiary-fixed": "#1f1b10",
+                    "inverse-primary": "#ffb4a5",
+                    "surface-tint": "#a03f2e",
+                    "surface-container-highest": "#e5e2dd",
+                    "on-tertiary-fixed-variant": "#4b4639",
+                    "on-tertiary-container": "#fffbff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
+        .font-serif { font-family: 'Noto Serif', serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        @media (max-height: 700px) {
+            .hero-text { font-size: 1.875rem; line-height: 2.25rem; }
+            .hero-subtext { font-size: 0.75rem; }
+            .card-padding { padding: 0.75rem !important; }
+            .card-gap { gap: 0.5rem !important; }
+            .cta-height { height: 3rem !important; }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen flex flex-col items-center p-4 selection:bg-primary-container selection:text-white">
+<!-- Top Branding -->
+<header class="flex-shrink-0 flex justify-center items-center h-12">
+<h1 class="text-2xl font-headline italic font-bold text-primary tracking-tight">Kindred</h1>
+</header>
+<main class="w-full max-w-md mx-auto flex flex-col flex-grow justify-between py-2 space-y-4">
+<!-- Editorial Hero Section -->
+<section class="text-center space-y-1">
+<p class="hero-subtext text-on-surface-variant font-medium tracking-widest text-xs uppercase">Welcome</p>
+<h2 class="hero-text text-3xl font-headline font-bold text-on-surface leading-tight px-4">Your photo. Your words. Every day.</h2>
+</section>
+<!-- Sample Card Preview -->
+<div class="relative group mx-auto w-full max-w-[280px]">
+<div class="absolute -inset-1 bg-secondary-container/30 rounded-lg -rotate-1 -z-10"></div>
+<article class="bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_4px_16px_rgba(28,28,25,0.06)] border border-outline-variant/15 p-3 card-padding flex flex-col gap-3 card-gap">
+<div class="aspect-[4/5] w-full rounded-md overflow-hidden bg-surface-container">
+<img alt="Sample Story" class="w-full h-full object-cover" data-alt="Candid portrait of a smiling woman in a sun-drenched library with soft film grain texture and warm afternoon light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnmgWJUmIcDufQyn962Id5nYL59rytuO19hcZ3ij3_wMN0BaeXbNAPGYRkg44DNtLkClefvXGfJwdvIqGI_XWclLFReRFRYdRxwOx_-nPEsxyWGvEnMY57yngpHTRANVGE6Fr9Ptuv1aM_HqKmqngJDD3zZWAcgrYTMSECheHIJs825B7SnbOiyENXmoG-V3tcz7t7DC7asrsAsr0HdGEGijSYunlzYekiZXStC-72moCx1jOiUmWTV29_HmaHvgVrUW2OEpKw5k8"/>
+</div>
+<div class="px-1 space-y-1">
+<p class="font-headline italic text-sm leading-relaxed text-on-surface">
+                        "The simplest moments often hold the most profound weight."
+                    </p>
+<div class="flex items-center gap-2 pt-1">
+<div class="h-[1px] flex-grow bg-outline-variant/30"></div>
+<span class="text-[10px] font-label text-stone-400 uppercase tracking-widest">A. Rivera</span>
+</div>
+</div>
+</article>
+</div>
+<!-- Auth Actions Cluster -->
+<div class="space-y-3 w-full px-2">
+<!-- Primary CTA -->
+<button class="cta-height w-full h-12 bg-gradient-to-r from-primary to-primary-container text-white rounded-full font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-md shadow-primary/10">
+<span class="material-symbols-outlined text-xl" data-icon="phone">phone</span>
+<span class="text-sm">Continue with Phone Number</span>
+</button>
+<!-- Secondary CTA -->
+<button class="cta-height w-full h-12 bg-surface-container-low border border-outline-variant/20 rounded-full font-semibold flex items-center justify-center gap-3 transition-all hover:bg-surface-container-high active:scale-[0.98]">
+<img alt="Google" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxUBezT54SuynOlOdoqTy_gV3UmrOWY-njF7FcARl6YE6eHwGOdc6qMG1l35Jx85Q3CM89axf0Wegjk_JbXJS49RrKheMUGgaj-tF6b68L80ggp_RWbBJhMyOlx0OFG5FAtxK_fJ-DyXENhW-SWwb7XxI8ncoOD141jzk6t0YgrAZB93LAZuhHMmY3rfDDCCSPn31lefaEmL8Pm6u5_qyR9PlB428U3t9u5bqxu3uU4IgbD2Qw5TrvQ8vz5SztOvxVLPDMGMANzjU"/>
+<span class="text-on-surface text-sm">Continue with Google</span>
+</button>
+<!-- Tertiary Action -->
+<div class="text-center">
+<button class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto">
+                    Skip for now → Browse as guest
+                </button>
+</div>
+</div>
+</main>
+<!-- Footer Note -->
+<footer class="flex-shrink-0 py-4 px-6 text-center">
+<p class="text-[10px] leading-relaxed text-stone-400 max-w-[280px] mx-auto">
+            By continuing, you agree to our <a class="underline hover:text-primary" href="#">Terms</a> and <a class="underline hover:text-primary" href="#">Privacy</a>.
+        </p>
+</footer>
+</body></html>

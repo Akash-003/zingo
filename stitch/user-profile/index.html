@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "inverse-surface": "#31302d",
+                    "on-primary-container": "#fffbff",
+                    "primary-fixed-dim": "#ffb4a5",
+                    "secondary": "#5a614a",
+                    "surface-container-high": "#ebe8e3",
+                    "primary-fixed": "#ffdad3",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f3f0eb",
+                    "primary-container": "#bd5541",
+                    "surface": "#fcf9f4",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#56423e",
+                    "outline": "#89726d",
+                    "surface-container-low": "#f6f3ee",
+                    "outline-variant": "#ddc0bb",
+                    "tertiary": "#615c4e",
+                    "on-primary-fixed-variant": "#802919",
+                    "surface-bright": "#fcf9f4",
+                    "on-secondary-container": "#5e664e",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed": "#171e0b",
+                    "error": "#ba1a1a",
+                    "secondary-fixed-dim": "#c2caad",
+                    "on-secondary-fixed-variant": "#424a33",
+                    "tertiary-fixed": "#eae2d0",
+                    "on-background": "#1c1c19",
+                    "tertiary-container": "#7a7465",
+                    "on-primary-fixed": "#3f0400",
+                    "secondary-fixed": "#dee6c8",
+                    "surface-dim": "#dcdad5",
+                    "on-surface": "#1c1c19",
+                    "primary": "#9d3d2c",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#f0ede9",
+                    "background": "#fcf9f4",
+                    "secondary-container": "#dbe3c5",
+                    "tertiary-fixed-dim": "#cec6b5",
+                    "on-tertiary-fixed": "#1f1b10",
+                    "inverse-primary": "#ffb4a5",
+                    "surface-tint": "#a03f2e",
+                    "surface-container-highest": "#e5e2dd",
+                    "on-tertiary-fixed-variant": "#4b4639",
+                    "on-tertiary-container": "#fffbff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-layering-no-borders {
+            border: none !important;
+        }
+        .editorial-shadow {
+            box-shadow: 0 8px 24px rgba(28, 28, 25, 0.06);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-stone-50/70 dark:bg-stone-900/70 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<button class="text-stone-500 dark:text-stone-400 hover:bg-stone-200/50 dark:hover:bg-stone-800/50 transition-colors p-2 rounded-full active:opacity-80 active:scale-95">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-2xl font-serif italic text-orange-900 dark:text-orange-200">Kindred</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-stone-500 dark:text-stone-400 hover:bg-stone-200/50 dark:hover:bg-stone-800/50 transition-colors p-2 rounded-full active:opacity-80 active:scale-95">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="text-stone-500 dark:text-stone-400 hover:bg-stone-200/50 dark:hover:bg-stone-800/50 transition-colors p-2 rounded-full active:opacity-80 active:scale-95">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-4xl mx-auto">
+<!-- Profile Hero Section -->
+<section class="mb-12">
+<div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+<!-- Large Profile Photo -->
+<div class="relative group">
+<div class="w-40 h-40 md:w-56 md:h-56 rounded-xl overflow-hidden editorial-shadow ring-4 ring-surface-container">
+<img class="w-full h-full object-cover" data-alt="Close-up portrait of a woman with a warm smile, natural lighting, soft outdoor background with golden hour glow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_JgJZSqjyqh0bhuyafPstWNK5h4uWX6AKpp2EIWXM2tXZWHQnr0T0G8AhHeKCjmTIcSzG3fHMPY4MybEIV1Mqnr9QYAdtYkW0Yd9kOryktd3DF_TnOyVVuQ3VdqEoXEygRH_sW99ETBFOBVYJNHOCd3A9aVoo16VW-uhRq4_2iSWn_92Ebq-n-oW0igZxDkmwOA046Yq0o1o-U8BkZwUdOYCY6gn8ezkqgaL5qiWBbT_eVy6Oa5s1z9ysJeQvtSYsC0-XX9BNQ3A"/>
+</div>
+<button class="absolute -bottom-2 -right-2 bg-primary text-on-primary p-3 rounded-full editorial-shadow hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+</button>
+</div>
+<!-- User Details -->
+<div class="flex-1 text-center md:text-left mt-4 md:mt-0">
+<div class="flex flex-col md:flex-row items-center md:items-baseline gap-3 mb-2">
+<h2 class="text-4xl font-headline font-bold text-on-surface">Elena Vance</h2>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-full tracking-wider uppercase">Premium</span>
+</div>
+<p class="text-on-surface-variant max-w-md italic mb-6">"Collecting moments and whispers of wisdom from the quiet corners of the world."</p>
+<div class="flex flex-wrap justify-center md:justify-start gap-3">
+<button class="px-6 py-2.5 bg-primary text-on-primary rounded-full font-semibold editorial-shadow transition-all hover:opacity-90 active:scale-95">
+                            Edit Profile
+                        </button>
+<button class="px-6 py-2.5 bg-surface-container-low border border-outline-variant/30 text-on-surface rounded-full font-semibold transition-all hover:bg-surface-container-high">
+                            View Public Profile
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Profile Stats Bento Layout -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+<div class="bg-surface-container-low p-6 rounded-lg text-center">
+<span class="block text-2xl font-headline font-bold text-primary">124</span>
+<span class="text-sm text-on-surface-variant font-medium">Collections</span>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg text-center">
+<span class="block text-2xl font-headline font-bold text-primary">2.8k</span>
+<span class="text-sm text-on-surface-variant font-medium">Followers</span>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg text-center">
+<span class="block text-2xl font-headline font-bold text-primary">452</span>
+<span class="text-sm text-on-surface-variant font-medium">Saved</span>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg text-center">
+<span class="block text-2xl font-headline font-bold text-primary">12</span>
+<span class="text-sm text-on-surface-variant font-medium">Featured</span>
+</div>
+</section>
+<!-- Avatar Management Section -->
+<section class="bg-surface-container-lowest p-8 rounded-lg editorial-shadow mb-12">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="text-xl font-headline font-bold text-on-surface">Identity Vault</h3>
+<p class="text-sm text-on-surface-variant">Switch between your curated visual identities.</p>
+</div>
+<button class="text-primary font-semibold flex items-center gap-2 hover:underline">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                    Upload New
+                </button>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+<!-- Primary Avatar -->
+<div class="flex flex-col items-center gap-3">
+<div class="relative w-24 h-24 rounded-full ring-4 ring-primary ring-offset-4 ring-offset-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Primary avatar photo, portrait of smiling woman in warm sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDaFy5pHJAii0bjb7tmKdxx4YZVJwd-1GQZP9XBwEB2wDaqDGYDhA0KzxofxJD6DX8u7D6irY8B-rFl-eiiCpLoKe1qNfpdJf00cyDAj7TofgjCLiqWx7iuhzpsT4y7aSbp3vJZ5AsWt5XqMKCwIGyvGtSBrnxZr_NWwOnrCN-dudn3EJYIo1tp38girQGIWO6GGJqLA04UhLnwi9kgkm7b7iEcOq80xR7xp68wrUAxaCTCZWlld5XE7BRdL9TJ3OEcgam9zfNQqE"/>
+<div class="absolute inset-0 bg-primary/10"></div>
+</div>
+<span class="text-xs font-bold text-primary tracking-wide uppercase">Primary</span>
+</div>
+<!-- Saved Avatar 2 -->
+<div class="flex flex-col items-center gap-3 group cursor-pointer">
+<div class="relative w-24 h-24 rounded-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-300">
+<img class="w-full h-full object-cover" data-alt="Alternative black and white portrait profile photo with artistic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCFXOQop01CHfIfh2xZBMN-DVnEXnvQTgGdAv53oTpRmcR6VskyoLaLAY_XgQ3d4cFEqiOOt17_hqQ7mhMyxQQVxJcK-W6llxn0tntC51jtuI0-hYtVxxlVBWco_C7FYA3SsYIva0frdfKyiClk6sdFrJhopGsIL3Vl5vR1wrT-1cShekP3uXnnDES64aobkq_1GAbuC5ji5CS7T_oXW6h8hE_xtWRRk5s0pO5q2YzhPqcKlErs23kzVGyLgb63APoQ0ZvKZ4fb6k"/>
+</div>
+<span class="text-xs font-medium text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">Select</span>
+</div>
+<!-- Saved Avatar 3 -->
+<div class="flex flex-col items-center gap-3 group cursor-pointer">
+<div class="relative w-24 h-24 rounded-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-300">
+<img class="w-full h-full object-cover" data-alt="Casual profile photo of a woman in a cafe setting with soft background blur" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB78AsbVkzgzEIR5hR7x8qeXFu6SRL9izd4r6tFk2XRIAROcjdrE3drBWTPj6KEgb86BWeQIsdV-p-zojVmtcZNUXriLFbkEBGqVQuhBWwcd6NZXhlZCyMCEBNm2QtzxBjDAHmO_IvLGq4TJgiBM7YFhiLBYO9F8pnNf1yN_w0gQxBIccZqMLvs9q1Goj-gbXxqk8HCisn2ogLOUnC_vUq_B2hR6kJPzklFDV7OxGqiEkihPbgtDYWFgfMr62QWsfVmGyFIF7eXKJQ"/>
+</div>
+<span class="text-xs font-medium text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">Select</span>
+</div>
+<!-- Saved Avatar 4 -->
+<div class="flex flex-col items-center gap-3 group cursor-pointer">
+<div class="relative w-24 h-24 rounded-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-300">
+<img class="w-full h-full object-cover" data-alt="Professional studio portrait profile photo with neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACed0CXsIYkmxrXGyEQobANMnKv4y3ukktn3yl4UhKo67hHf3-mZCypSyMs6ZYIAimE8rtkxlamfUteqVWb5Vdi1unbwEYrM8BSJeeoyWgWD4qgyRgsrgX8-dKyVJe9CKzfNMn7FY5QVd202dgXmVeichikuCrKyN9Pvu6yrQXccM1wAywopSc-tttURTxELKfViOTZmrT3CnsLUAUE8JiBAmsVpvuHyilhKa4TiBCgjmug-Acrj5s2vXctYsTyxq2WI1_06aLqLQ"/>
+</div>
+<span class="text-xs font-medium text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">Select</span>
+</div>
+<!-- Placeholder / Add -->
+<div class="flex flex-col items-center gap-3">
+<button class="w-24 h-24 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center text-outline hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-3xl" data-icon="image_search">image_search</span>
+</button>
+<span class="text-xs font-medium text-on-surface-variant">Import</span>
+</div>
+</div>
+</section>
+<!-- Settings Quick Links -->
+<section class="space-y-4">
+<h3 class="text-lg font-headline font-bold text-on-surface px-2">Account Settings</h3>
+<div class="bg-surface-container-low rounded-lg divide-y divide-outline-variant/10 overflow-hidden">
+<a class="flex items-center justify-between p-5 hover:bg-surface-container-high transition-colors group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+<span class="font-medium">Notifications &amp; Updates</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-5 hover:bg-surface-container-high transition-colors group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+</div>
+<span class="font-medium">Privacy &amp; Security</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-5 hover:bg-surface-container-high transition-colors group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="palette">palette</span>
+</div>
+<span class="font-medium">Appearance &amp; Theme</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-5 hover:bg-surface-container-high transition-colors group" href="#">
+<div class="flex items-center gap-4 text-error">
+<div class="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</div>
+<span class="font-medium">Sign Out</span>
+</div>
+</a>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-stone-50/70 dark:bg-stone-900/70 backdrop-blur-xl rounded-t-[32px] shadow-[0_-8px_24px_rgba(28,28,25,0.06)] z-50">
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 p-2 hover:text-orange-700 dark:hover:text-orange-300" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-[10px] font-medium mt-1">Discover</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 p-2 hover:text-orange-700 dark:hover:text-orange-300" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="text-[10px] font-medium mt-1">Create</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 p-2 hover:text-orange-700 dark:hover:text-orange-300" href="#">
+<span class="material-symbols-outlined" data-icon="library_books">library_books</span>
+<span class="text-[10px] font-medium mt-1">Collections</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-orange-100 dark:bg-orange-900/30 text-orange-900 dark:text-orange-100 rounded-full px-5 py-2" href="#">
+<span class="material-symbols-outlined" data-icon="person_2" style="font-variation-settings: 'FILL' 1;">person_2</span>
+<span class="text-[10px] font-bold mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,164 @@
+<html class="light" lang="en"><head></head><body class="bg-white text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed h-screen flex flex-col overflow-hidden">```html
+
+
+
+    <meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#31302d",
+                        "on-primary-container": "#fffbff",
+                        "primary-fixed-dim": "#ffb4a5",
+                        "secondary": "#5a614a",
+                        "surface-container-high": "#ebe8e3",
+                        "primary-fixed": "#ffdad3",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f3f0eb",
+                        "primary-container": "#bd5541",
+                        "surface": "#fcf9f4",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#56423e",
+                        "outline": "#89726d",
+                        "surface-variant": "#e5e2dd",
+                        "on-error": "#ffffff",
+                        "tertiary": "#615c4e",
+                        "on-primary-fixed-variant": "#802919",
+                        "surface-bright": "#fcf9f4",
+                        "on-secondary-container": "#5e664e",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#171e0b",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#c2caad",
+                        "on-secondary-fixed-variant": "#424a33",
+                        "tertiary-fixed": "#eae2d0",
+                        "on-background": "#1c1c19",
+                        "outline-variant": "#ddc0bb",
+                        "tertiary-container": "#7a7465",
+                        "on-primary-fixed": "#3f0400",
+                        "secondary-fixed": "#dee6c8",
+                        "surface-container-low": "#f6f3ee",
+                        "surface-dim": "#dcdad5",
+                        "on-surface": "#1c1c19",
+                        "primary": "#9d3d2c",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#f0ede9",
+                        "background": "#fcf9f4",
+                        "secondary-container": "#dbe3c5",
+                        "tertiary-fixed-dim": "#cec6b5",
+                        "on-tertiary-fixed": "#1f1b10",
+                        "inverse-primary": "#ffb4a5",
+                        "surface-tint": "#a03f2e",
+                        "surface-container-highest": "#e5e2dd",
+                        "on-tertiary-fixed-variant": "#4b4639",
+                        "on-tertiary-container": "#fffbff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Noto Serif"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .serif-italic { font-family: 'Noto Serif'; font-style: italic; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<!-- Fixed Header and Filter Section -->
+<div class="flex-none bg-white z-50">
+<header class="w-full border-b border-surface-container-high px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-lg" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant/30 rounded-full py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="Search" type="text"/>
+</div>
+<button class="bg-white border border-outline text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all active:scale-95">
+                    Create
+                </button>
+<img alt="User Profile" class="w-9 h-9 rounded-full object-cover ring-1 ring-outline-variant/30" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7dyAv1Ad6Cib-xrxlwJ1C6vUk4nVrH8pnmyp8TJhhbDOgQ-zb5-D7yDb2ZSLAi1551eJiLJML068ASvcCLeduSh8sEDlEzKAMfv551O3BDixgaLu7ChzN992OrCe-TOZlLZd36YNJ7i0bbPJoAvoAUJXBjveGwT_yR0xfhf8HI__ho1l32UFsRCkPgsa0CKX3iFoVW3UZX0UKh6_orh6Nme3T2ihjVLzw-ucKsxTlHkKUk5Eudi6lkxprg7L1xH-Fpc7Ec7ITDCg"/>
+</div>
+</header>
+<!-- Multi-row Category Chips (Fixed) -->
+<section class="px-4 py-4 space-y-2 border-b border-surface-container-high">
+<div class="flex gap-2 overflow-x-auto hide-scrollbar">
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">ALL</button>
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full bg-[#52489C] text-white font-bold text-[10px] uppercase tracking-widest">Bible Verses</button>
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Motivational</button>
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Love</button>
+</div>
+<div class="flex gap-2 overflow-x-auto hide-scrollbar">
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Day's Special</button>
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Life</button>
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Sayings</button>
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Good Morning</button>
+</div>
+<div class="flex gap-2 overflow-x-auto hide-scrollbar">
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Happy Weekday</button>
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Birthday</button>
+<button class="whitespace-nowrap px-5 py-1.5 rounded-full border border-outline text-stone-600 font-bold text-[10px] uppercase tracking-widest">Good Night</button>
+</div>
+</section>
+</div>
+<!-- Scrollable Main Feed -->
+<main class="flex-1 overflow-y-auto px-4 pb-12 max-w-lg mx-auto w-full space-y-12 pt-4">
+<!-- Card 1 -->
+<section class="quote-card">
+<div class="relative rounded-t-[2.5rem] overflow-hidden bg-gradient-to-b from-[#F3D7E1] to-[#D66853]/20 aspect-[4/5] flex items-center justify-center p-8">
+<div class="absolute inset-0 opacity-20 pointer-events-none">
+<img alt="" class="w-full h-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_RZ4zyqfXTqHJXlGWq10ftpBD4ALl2avByN4_6TYqwAQNpGftDGTq9PZdTB5oARMkz7Q5HcC0jPuEo9Gd25NJePzSrM02XtZ-kALJeDCgWnDYUGnFOSv6ZAYqlMNvLW17uv8RThp-B3RccV7XH9O4d2ILQpPtugZKoEndCSPN75Y7MvKnKBraqkb3tZxrRO47phthIJVLptNyEsb5w5vDzh1yKXl2rLMQcRqE_P45QwOUKDuY2bgDJPiTEh9828Q1XPTkDtonFvY"/>
+</div>
+<h2 class="relative font-body text-[2.5rem] leading-[1.1] text-[#2D2D2D] font-medium text-center z-10">
+                    You are allowed to be both work in progress &amp; a masterpiece.
+                </h2>
+<div class="absolute bottom-12 right-4 z-20 w-44">
+<div class="relative">
+<div class="absolute -top-4 -left-4 w-full h-full bg-[#E37A68] rounded-3xl translate-x-2 -translate-y-2 opacity-80"></div>
+<div class="relative rounded-3xl overflow-hidden aspect-square border-4 border-white shadow-xl">
+<img alt="Michelle Smith" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7dyAv1Ad6Cib-xrxlwJ1C6vUk4nVrH8pnmyp8TJhhbDOgQ-zb5-D7yDb2ZSLAi1551eJiLJML068ASvcCLeduSh8sEDlEzKAMfv551O3BDixgaLu7ChzN992OrCe-TOZlLZd36YNJ7i0bbPJoAvoAUJXBjveGwT_yR0xfhf8HI__ho1l32UFsRCkPgsa0CKX3iFoVW3UZX0UKh6_orh6Nme3T2ihjVLzw-ucKsxTlHkKUk5Eudi6lkxprg7L1xH-Fpc7Ec7ITDCg"/>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-[#F8E1E1] px-6 py-4 flex items-center">
+<span class="text-[#2D2D2D] font-medium">Michelle Smith</span>
+</div>
+<div class="mt-6 space-y-3">
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 bg-[#1E88E5] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="share">share</span> SHARE
+                    </button>
+<button class="flex items-center justify-center gap-2 bg-[#C62828] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span> DOWNLOAD
+                    </button>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center py-3 border border-outline text-[#52489C] rounded-xl font-bold text-xs active:bg-stone-50 transition-all">Change photo</button>
+<button class="flex items-center justify-center py-3 border border-outline text-[#52489C] rounded-xl font-bold text-xs active:bg-stone-50 transition-all">Edit Name</button>
+</div>
+</div>
+</section>
+<!-- Card 2 -->
+<section class="quote-card">
+<div class="relative rounded-t-[2.5rem] overflow-hidden bg-gradient-to-b from-[#E3F2FD] to-[#1E88E5]/20 aspect-[4/5] flex items-center justify-center p-8">
+<div class="absolute inset-0 opacity-20 pointer-events-none">
+</div></div></section></main></body></html>

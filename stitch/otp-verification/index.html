@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "inverse-surface": "#31302d",
+                    "on-primary-container": "#fffbff",
+                    "primary-fixed-dim": "#ffb4a5",
+                    "secondary": "#5a614a",
+                    "surface-container-high": "#ebe8e3",
+                    "primary-fixed": "#ffdad3",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f3f0eb",
+                    "primary-container": "#bd5541",
+                    "surface": "#fcf9f4",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#56423e",
+                    "outline": "#89726d",
+                    "surface-variant": "#e5e2dd",
+                    "on-error": "#ffffff",
+                    "tertiary": "#615c4e",
+                    "on-primary-fixed-variant": "#802919",
+                    "surface-bright": "#fcf9f4",
+                    "on-secondary-container": "#5e664e",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed": "#171e0b",
+                    "error": "#ba1a1a",
+                    "secondary-fixed-dim": "#c2caad",
+                    "on-secondary-fixed-variant": "#424a33",
+                    "tertiary-fixed": "#eae2d0",
+                    "on-background": "#1c1c19",
+                    "outline-variant": "#ddc0bb",
+                    "tertiary-container": "#7a7465",
+                    "on-primary-fixed": "#3f0400",
+                    "secondary-fixed": "#dee6c8",
+                    "surface-container-low": "#f6f3ee",
+                    "surface-dim": "#dcdad5",
+                    "on-surface": "#1c1c19",
+                    "primary": "#9d3d2c",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#f0ede9",
+                    "background": "#fcf9f4",
+                    "secondary-container": "#dbe3c5",
+                    "tertiary-fixed-dim": "#cec6b5",
+                    "on-tertiary-fixed": "#1f1b10",
+                    "inverse-primary": "#ffb4a5",
+                    "surface-tint": "#a03f2e",
+                    "surface-container-highest": "#e5e2dd",
+                    "on-tertiary-fixed-variant": "#4b4639",
+                    "on-tertiary-container": "#fffbff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcf9f4; color: #1c1c19; }
+        .font-serif { font-family: 'Noto Serif', serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col items-center justify-start overflow-x-hidden selection:bg-primary-fixed selection:text-on-primary-fixed">
+<div class="w-full max-w-md mx-auto min-h-screen flex flex-col bg-surface px-6 pt-12 pb-8">
+<header class="mb-10">
+<button class="w-12 h-12 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors duration-200 -ml-2 text-on-surface">
+<span class="material-symbols-outlined text-2xl" data-icon="arrow_back">arrow_back</span>
+</button>
+</header>
+<main class="flex-grow">
+<section class="mb-12">
+<h1 class="text-4xl font-headline font-bold text-on-surface mb-3 tracking-tight">Verify your number</h1>
+<div class="flex items-center gap-2">
+<p class="text-on-surface-variant font-body">Code sent to +91 98765 43210</p>
+<button class="text-primary font-bold text-sm hover:underline decoration-outline-variant underline-offset-4">Edit</button>
+</div>
+</section>
+<section class="mb-12">
+<div class="flex justify-between items-center gap-2 sm:gap-4">
+<input class="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-0 bg-surface-container-low ring-1 ring-inset ring-outline-variant focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all outline-none text-on-surface" maxlength="1" placeholder="·" type="text"/>
+<input class="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-0 bg-surface-container-low ring-1 ring-inset ring-outline-variant focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all outline-none text-on-surface" maxlength="1" placeholder="·" type="text"/>
+<input class="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-0 bg-surface-container-low ring-1 ring-inset ring-outline-variant focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all outline-none text-on-surface" maxlength="1" placeholder="·" type="text"/>
+<input class="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-0 bg-surface-container-low ring-1 ring-inset ring-outline-variant focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all outline-none text-on-surface" maxlength="1" placeholder="·" type="text"/>
+<input class="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-0 bg-surface-container-low ring-1 ring-inset ring-outline-variant focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all outline-none text-on-surface" maxlength="1" placeholder="·" type="text"/>
+<input class="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-0 bg-surface-container-low ring-1 ring-inset ring-outline-variant focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all outline-none text-on-surface" maxlength="1" placeholder="·" type="text"/>
+</div>
+</section>
+<div class="space-y-8">
+<button class="w-full h-16 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-lg rounded-full shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-200">
+                    Verify
+                </button>
+<div class="flex flex-col items-center gap-2">
+<p class="text-on-surface-variant font-medium">Resend code in <span class="text-on-surface font-bold tabular-nums">0:45</span></p>
+</div>
+</div>
+</main>
+<footer class="mt-auto pt-8">
+<div class="relative overflow-hidden rounded-lg h-48 bg-surface-container">
+<img alt="Atmospheric library" class="w-full h-full object-cover mix-blend-multiply opacity-20" data-alt="Soft focused vintage books in a warm sunlit library with dust motes dancing in the light, muted earthy tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj1_y7AtPBmjwhb6gaKfNWvSsBED2mpD_hK-6Ow9d6fzRKCUnm_hBEpyuPaxkLW6ZbCj4f9wLuZ0R_pUs1lOnvs8pfhqUBv_tEQcmQRygVP70uwYLld5oO_hYPMCgKhULWkMPBoUAb8PxgWjxcDJG1tDk1Co80pwhJYuJ_L1MTsDTKBWB7hNAuM5u3xzxgfQgoEs9F-yLzlOod3RX4wMjJJKhFWAIcmYXhdovEGhsi3V1s6UJzkmVNnwo3416WrnxhT1ZE0-a1tQs"/>
+<div class="absolute inset-0 flex items-center justify-center p-8 text-center">
+<p class="font-headline italic text-on-surface-variant text-lg leading-relaxed">
+                        "Words are, in my not-so-humble opinion, our most inexhaustible source of magic."
+                    </p>
+</div>
+</div>
+</footer>
+</div>
+</body></html>
