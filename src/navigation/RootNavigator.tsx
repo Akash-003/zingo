@@ -4,8 +4,9 @@ import { Session } from '@supabase/supabase-js';
 
 import { supabase } from '../services/supabase';
 import { useUserStore } from '../store/userStore';
+import { useUserProfile } from '../hooks/useUserProfile';
 import AuthStack from './AuthStack';
-import MainStack from './MainStack';
+import MainTabs from './MainTabs';
 import ProfileSetupScreen from '../screens/auth/ProfileSetupScreen';
 
 export default function RootNavigator() {
@@ -15,16 +16,15 @@ export default function RootNavigator() {
   const uid = useUserStore((s) => s.uid);
   const name = useUserStore((s) => s.name);
   const setUid = useUserStore((s) => s.setUid);
-  const setName = useUserStore((s) => s.setName);
-  const setPrimaryPhotoUrl = useUserStore((s) => s.setPrimaryPhotoUrl);
   const reset = useUserStore((s) => s.reset);
+  const { fetchProfile } = useUserProfile();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       if (s?.user) {
         setUid(s.user.id);
-        fetchProfile(s.user.id);
+        fetchProfile(s.user.id).finally(() => setInitialising(false));
       } else {
         setInitialising(false);
       }
@@ -45,21 +45,6 @@ export default function RootNavigator() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('name, primary_photo_url')
-        .eq('id', userId)
-        .single();
-
-      if (data?.name) setName(data.name);
-      if (data?.primary_photo_url) setPrimaryPhotoUrl(data.primary_photo_url);
-    } finally {
-      setInitialising(false);
-    }
-  };
-
   if (initialising) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -70,5 +55,5 @@ export default function RootNavigator() {
 
   if (!session) return <AuthStack />;
   if (!name) return <ProfileSetupScreen />;
-  return <MainStack />;
+  return <MainTabs />;
 }
