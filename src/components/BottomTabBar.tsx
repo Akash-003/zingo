@@ -19,7 +19,8 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
     <View style={[styles.container, { paddingBottom: insets.bottom || 12 }]}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
-        const label = (options.tabBarLabel as string) ?? route.name;
+        const rawLabel = options.tabBarLabel;
+        const label = typeof rawLabel === 'string' ? rawLabel : route.name;
         const isActive = state.index === index;
         const icons = TAB_ICONS[route.name] ?? { active: 'ellipse', inactive: 'ellipse-outline' };
 

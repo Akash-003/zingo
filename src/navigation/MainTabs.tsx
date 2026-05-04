@@ -13,10 +13,10 @@ export default function MainTabs() {
       tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen name="Discover" component={FeedScreen} options={{ tabBarLabel: 'Discover' }} />
-      <Tab.Screen name="Create" component={CreateScreen} options={{ tabBarLabel: 'Create' }} />
-      <Tab.Screen name="Collections" component={CollectionsScreen} options={{ tabBarLabel: 'Collections' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+      <Tab.Screen name="Discover" component={FeedScreen} />
+      <Tab.Screen name="Create" component={CreateScreen} />
+      <Tab.Screen name="Collections" component={CollectionsScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
