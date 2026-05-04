@@ -21,6 +21,7 @@ import { useUserStore } from '../../store/userStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PREVIEW_WIDTH = SCREEN_WIDTH - 32;
+const PREVIEW_HEIGHT = PREVIEW_WIDTH * (3 / 2); // fixed 2:3 card ratio, matches 400×600 canvas
 const CANVAS_WIDTH = 400;
 
 const CATEGORIES = [
@@ -32,8 +33,7 @@ interface SlotPos { x: number; y: number }
 
 export default function CreateScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageRatio, setImageRatio] = useState(1);
-  // Fix 1: initial fallbacks — replaced by resetHandles() after image pick
+  // initial fallbacks — replaced by resetHandles() after image pick
   const [photoPos, setPhotoPos] = useState<SlotPos>({ x: PREVIEW_WIDTH / 2 - 50, y: 80 });
   const [namePos, setNamePos] = useState<SlotPos>({ x: PREVIEW_WIDTH / 2 - 60, y: 300 });
   const [circleSize, setCircleSize] = useState(100);
@@ -45,11 +45,10 @@ export default function CreateScreen() {
   const uid = useUserStore((s) => s.uid);
   const name = useUserStore((s) => s.name);
 
-  const previewHeight = PREVIEW_WIDTH * imageRatio;
 
   const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
 
-  // Fix 1: compute default positions from actual previewHeight at pick time
+  // Fix 1: compute default positions from actual PREVIEW_HEIGHT at pick time
   const resetHandles = (ph: number) => {
     setPhotoPos({ x: PREVIEW_WIDTH / 2 - 50, y: ph * 0.2 - 50 });
     setNamePos({ x: PREVIEW_WIDTH / 2 - 60, y: ph * 0.85 });
@@ -64,21 +63,18 @@ export default function CreateScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
+      allowsEditing: true,
+      aspect: [2, 3],
       quality: 0.9,
     });
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
-    // Fix 1: compute ratio first, then reset handles with the real preview height
-    const ratio = (asset.width && asset.height) ? asset.height / asset.width : 1;
     setImageUri(asset.uri);
-    setImageRatio(ratio);
-    resetHandles(PREVIEW_WIDTH * ratio);
+    resetHandles(PREVIEW_HEIGHT);
   };
 
   // Fix 2: refs holding live values so the persistent PanResponder always reads current state
   const circleSizeRef = useRef(circleSize);
-  const previewHeightRef = useRef(previewHeight);
   const photoPosRef = useRef(photoPos);
   const namePosRef = useRef(namePos);
 
@@ -94,10 +90,9 @@ export default function CreateScreen() {
       },
       onPanResponderMove: (_, gs) => {
         const size = circleSizeRef.current;
-        const ph = previewHeightRef.current;
         setPhotoPos({
           x: clamp(photoStartRef.current.x + gs.dx, 0, PREVIEW_WIDTH - size),
-          y: clamp(photoStartRef.current.y + gs.dy, 0, ph - size),
+          y: clamp(photoStartRef.current.y + gs.dy, 0, PREVIEW_HEIGHT - size),
         });
       },
     })
@@ -110,10 +105,9 @@ export default function CreateScreen() {
         nameStartRef.current = { ...namePosRef.current };
       },
       onPanResponderMove: (_, gs) => {
-        const ph = previewHeightRef.current;
         setNamePos({
           x: clamp(nameStartRef.current.x + gs.dx, 0, PREVIEW_WIDTH - 120),
-          y: clamp(nameStartRef.current.y + gs.dy, 0, ph - 32),
+          y: clamp(nameStartRef.current.y + gs.dy, 0, PREVIEW_HEIGHT - 32),
         });
       },
     })
@@ -175,16 +169,14 @@ export default function CreateScreen() {
 
   const reset = () => {
     setImageUri(null);
-    setImageRatio(1);
     setCategory(null);
     setIsPublic(false);
     setPublished(false);
-    resetHandles(PREVIEW_WIDTH);
+    resetHandles(PREVIEW_HEIGHT);
   };
 
   // Fix 2 + Fix 4: live-value sync effects after handlers, before return
   useEffect(() => { circleSizeRef.current = circleSize; }, [circleSize]);
-  useEffect(() => { previewHeightRef.current = previewHeight; }, [previewHeight]);
   useEffect(() => { photoPosRef.current = photoPos; }, [photoPos]);
   useEffect(() => { namePosRef.current = namePos; }, [namePos]);
 
@@ -216,7 +208,7 @@ export default function CreateScreen() {
 
         {/* Phase 1 — Pick Image */}
         <TouchableOpacity
-          style={[styles.pickZone, imageUri ? { height: previewHeight } : undefined]}
+          style={styles.pickZone}
           onPress={pickImage}
           activeOpacity={0.7}
         >
@@ -224,7 +216,7 @@ export default function CreateScreen() {
             <>
               <Image
                 source={{ uri: imageUri }}
-                style={{ width: PREVIEW_WIDTH, height: previewHeight }}
+                style={styles.pickImage}
               />
               <TouchableOpacity style={styles.changeBtn} onPress={pickImage}>
                 <Text style={styles.changeBtnText}>Change</Text>
@@ -244,11 +236,11 @@ export default function CreateScreen() {
             <Text style={styles.sectionTitle}>Position your photo & name</Text>
             <Text style={styles.sectionHint}>Drag the handles to reposition. Use the slider to resize your photo.</Text>
 
-            <View style={[styles.canvas, { height: previewHeight }]}>
+            <View style={styles.canvas}>
               <View style={styles.canvasImageWrapper} pointerEvents="none">
                 <Image
                   source={{ uri: imageUri }}
-                  style={[styles.canvasImage, { height: previewHeight }]}
+                  style={styles.canvasImage}
                 />
               </View>
 
@@ -290,7 +282,7 @@ export default function CreateScreen() {
               thumbTintColor="#9d3d2c"
             />
 
-            <TouchableOpacity style={styles.resetBtn} onPress={() => resetHandles(previewHeight)}>
+            <TouchableOpacity style={styles.resetBtn} onPress={() => resetHandles(PREVIEW_HEIGHT)}>
               <Text style={styles.resetBtnText}>Reset positions</Text>
             </TouchableOpacity>
           </View>
@@ -359,7 +351,7 @@ const styles = StyleSheet.create({
   // Phase 1
   pickZone: {
     width: PREVIEW_WIDTH,
-    height: 200,
+    height: PREVIEW_HEIGHT,
     borderStyle: 'dashed',
     borderWidth: 2,
     borderColor: '#89726d',
@@ -367,6 +359,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 24,
   },
+  pickImage: { width: PREVIEW_WIDTH, height: PREVIEW_HEIGHT },
   pickPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   pickLabel: { fontSize: 14, color: '#89726d' },
   changeBtn: {
@@ -387,6 +380,7 @@ const styles = StyleSheet.create({
   // Fix 3: removed `position: 'relative'` — no-op in React Native
   canvas: {
     width: PREVIEW_WIDTH,
+    height: PREVIEW_HEIGHT,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -398,6 +392,7 @@ const styles = StyleSheet.create({
   },
   canvasImage: {
     width: PREVIEW_WIDTH,
+    height: PREVIEW_HEIGHT,
   },
   photoHandle: {
     position: 'absolute',
