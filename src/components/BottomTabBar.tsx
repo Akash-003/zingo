@@ -16,7 +16,8 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom || 12 }]}>
+    <View style={styles.wrapper}>
+      <View style={[styles.container, { paddingBottom: insets.bottom || 12 }]}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const rawLabel = options.tabBarLabel;
@@ -45,11 +46,17 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
           </TouchableOpacity>
         );
       })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Fills the rectangular area behind the rounded corners so Android's black
+  // window background doesn't bleed through the corner cutouts.
+  wrapper: {
+    backgroundColor: '#fcf9f4',
+  },
   container: {
     flexDirection: 'row',
     backgroundColor: '#fcf9f4',
