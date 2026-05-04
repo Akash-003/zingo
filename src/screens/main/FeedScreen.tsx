@@ -73,8 +73,8 @@ function CardItem({ card, itemWidth }: CardItemProps) {
   );
 }
 
-// ActionButtons renders: paddingTop(12) + icon(22) + gap(4) + label(14) + paddingBottom(8) = 60px
-const ACTION_BUTTONS_HEIGHT = 60;
+// ActionButtons renders: paddingTop(10) + button(44) + paddingBottom(8) = 62px
+const ACTION_BUTTONS_HEIGHT = 62;
 // Gap between cards in feedContent
 const FEED_GAP = 48;
 // Top padding of feedContent
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   feedContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: ACTION_BUTTONS_HEIGHT,
+    paddingBottom: ACTION_BUTTONS_HEIGHT + 4,
     gap: 48,
   },
   cardItem: {

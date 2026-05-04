@@ -9,13 +9,6 @@ interface ActionButtonsProps {
   loading?: boolean;
 }
 
-const BUTTONS = [
-  { key: 'share',   icon: 'share-social-outline' as const, label: 'Share'    },
-  { key: 'save',    icon: 'download-outline'      as const, label: 'Save'     },
-  { key: 'photo',   icon: 'camera-outline'        as const, label: 'Photo'    },
-  { key: 'name',    icon: 'pencil-outline'        as const, label: 'Name'     },
-] as const;
-
 export default function ActionButtons({
   onShare,
   onDownload,
@@ -23,35 +16,51 @@ export default function ActionButtons({
   onEditName,
   loading = false,
 }: ActionButtonsProps) {
-  const handlers: Record<typeof BUTTONS[number]['key'], () => void> = {
-    share:  onShare,
-    save:   onDownload,
-    photo:  onChangePhoto,
-    name:   onEditName,
-  };
-
   return (
     <View style={styles.container}>
-      {BUTTONS.map(({ key, icon, label }) => (
-        <TouchableOpacity
-          key={key}
-          style={styles.btn}
-          onPress={handlers[key]}
-          activeOpacity={0.7}
-          disabled={loading && (key === 'share' || key === 'save')}
-        >
-          {loading && key === 'share' ? (
-            <ActivityIndicator size="small" color="#9d3d2c" />
-          ) : (
-            <Ionicons
-              name={icon}
-              size={22}
-              color="#9d3d2c"
-            />
-          )}
-          <Text style={styles.label}>{label}</Text>
-        </TouchableOpacity>
-      ))}
+      {/* Primary CTAs */}
+      <TouchableOpacity
+        style={[styles.primaryBtn, styles.shareBtn]}
+        onPress={onShare}
+        activeOpacity={0.8}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Ionicons name="share-social-outline" size={18} color="#fff" />
+        )}
+        <Text style={styles.primaryLabel}>Share</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.primaryBtn, styles.saveBtn]}
+        onPress={onDownload}
+        activeOpacity={0.8}
+        disabled={loading}
+      >
+        <Ionicons name="download-outline" size={18} color="#9d3d2c" />
+        <Text style={styles.saveLabel}>Save</Text>
+      </TouchableOpacity>
+
+      {/* Secondary actions */}
+      <TouchableOpacity
+        style={styles.secondaryBtn}
+        onPress={onChangePhoto}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="camera-outline" size={16} color="#56423e" />
+        <Text style={styles.secondaryLabel}>Photo</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.secondaryBtn}
+        onPress={onEditName}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="pencil-outline" size={16} color="#56423e" />
+        <Text style={styles.secondaryLabel}>Name</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -59,17 +68,55 @@ export default function ActionButtons({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingTop: 12,
+    alignItems: 'center',
+    paddingTop: 10,
     paddingBottom: 8,
+    paddingHorizontal: 4,
+    gap: 8,
   },
-  btn: {
+
+  // Primary buttons (Share + Save) — wider
+  primaryBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 44,
+    borderRadius: 12,
+  },
+  shareBtn: {
+    backgroundColor: '#9d3d2c',
+  },
+  saveBtn: {
+    backgroundColor: '#f5ebe8',
+    borderWidth: 1,
+    borderColor: '#9d3d2c',
+  },
+  primaryLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  saveLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#9d3d2c',
+  },
+
+  // Secondary buttons (Photo + Name) — compact
+  secondaryBtn: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 3,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#f6f3ee',
   },
-  label: {
-    fontSize: 11,
+  secondaryLabel: {
+    fontSize: 10,
+    fontWeight: '600',
     color: '#56423e',
-    fontWeight: '500',
   },
 });
