@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { Session } from '@supabase/supabase-js';
 
 import { supabase } from '../services/supabase';
@@ -20,34 +20,24 @@ export default function RootNavigator() {
   const { fetchProfile } = useUserProfile();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      if (s?.user) {
-        setUid(s.user.id);
-        fetchProfile(s.user.id).finally(() => setInitialising(false));
-      } else {
-        setInitialising(false);
-      }
-    });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, s) => {
         setSession(s);
         if (s?.user) {
           setUid(s.user.id);
-          fetchProfile(s.user.id);
+          fetchProfile(s.user.id).finally(() => setInitialising(false));
         } else {
           reset();
+          setInitialising(false);
         }
       },
     );
-
     return () => subscription.unsubscribe();
   }, []);
 
   if (initialising) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={styles.loading}>
         <ActivityIndicator size="large" color="#9d3d2c" />
       </View>
     );
@@ -57,3 +47,7 @@ export default function RootNavigator() {
   if (!name) return <ProfileSetupScreen />;
   return <MainTabs />;
 }
+
+const styles = StyleSheet.create({
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+});

@@ -14,15 +14,18 @@ export function useUserProfile() {
   const fetchProfile = async (userId: string) => {
     setLoading(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('name, primary_photo_url, photos, is_premium')
         .eq('id', userId)
         .single();
+      if (error) throw error;
       if (data?.name) setName(data.name);
       if (data?.primary_photo_url) setPrimaryPhotoUrl(data.primary_photo_url);
       if (data?.photos) setPhotos(data.photos);
       if (data?.is_premium != null) setIsPremium(data.is_premium);
+    } catch {
+      // profile fetch fails silently — app continues with defaults
     } finally {
       setLoading(false);
     }
@@ -34,20 +37,29 @@ export function useUserProfile() {
     try {
       await supabase.from('profiles').upsert({ id: uid, name });
       setName(name);
+    } catch {
+      // update fails silently
     } finally {
       setLoading(false);
     }
+  };
+
+  const _applyPrimaryPhoto = async (url: string) => {
+    if (!uid) return;
+    await supabase
+      .from('profiles')
+      .update({ primary_photo_url: url })
+      .eq('id', uid);
+    setPrimaryPhotoUrl(url);
   };
 
   const setPrimaryPhoto = async (url: string) => {
     if (!uid) return;
     setLoading(true);
     try {
-      await supabase
-        .from('profiles')
-        .update({ primary_photo_url: url })
-        .eq('id', uid);
-      setPrimaryPhotoUrl(url);
+      await _applyPrimaryPhoto(url);
+    } catch {
+      // set primary photo fails silently
     } finally {
       setLoading(false);
     }
@@ -67,8 +79,10 @@ export function useUserProfile() {
       await supabase.from('profiles').update({ photos: updated }).eq('id', uid);
       setPhotos(updated);
       if (!data?.primary_photo_url) {
-        await setPrimaryPhoto(url);
+        await _applyPrimaryPhoto(url);
       }
+    } catch {
+      // add photo fails silently
     } finally {
       setLoading(false);
     }
