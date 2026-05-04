@@ -45,6 +45,12 @@ export default function ProfileScreen() {
     await addPhoto(url);
   };
 
+  const handleHeroPhotoUploaded = async (url: string) => {
+    setEditPhotoModal(false);
+    await addPhoto(url);
+    await setPrimaryPhoto(url);
+  };
+
   const handleSetPrimary = async (url: string) => {
     await setPrimaryPhoto(url);
   };
@@ -123,7 +129,9 @@ export default function ProfileScreen() {
                   activeOpacity={isPrimary ? 1 : 0.7}
                 >
                   <View style={[styles.vaultCircle, isPrimary && styles.primaryRing]}>
-                    <Image source={{ uri: url }} style={styles.vaultPhoto} />
+                    <View style={styles.vaultPhotoWrap}>
+                      <Image source={{ uri: url }} style={styles.vaultPhoto} />
+                    </View>
                   </View>
                   <Text style={styles.vaultLabel}>{isPrimary ? 'Primary' : 'Set Primary'}</Text>
                 </TouchableOpacity>
@@ -131,7 +139,7 @@ export default function ProfileScreen() {
             })}
 
             {photos.length < 5 &&
-              Array.from({ length: emptySlots > 1 ? 1 : emptySlots }).map((_, i) => (
+              Array.from({ length: emptySlots }).map((_, i) => (
                 <PhotoUploader
                   key={`empty-${i}`}
                   onPhotoUploaded={handleAddPhoto}
@@ -172,12 +180,22 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* Edit primary photo modal */}
-      <Modal visible={editPhotoModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+      <Modal
+        visible={editPhotoModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditPhotoModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setEditPhotoModal(false)}
+        >
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Update Profile Photo</Text>
             <PhotoUploader
-              onPhotoUploaded={handleAddPhoto}
+              onPhotoUploaded={handleHeroPhotoUploaded}
               currentPhotoUrl={primaryPhotoUrl}
             />
             <TouchableOpacity
@@ -187,8 +205,9 @@ export default function ProfileScreen() {
               <Text style={styles.modalCloseText}>Cancel</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
     </SafeAreaView>
   );
 }
@@ -258,8 +277,9 @@ const styles = StyleSheet.create({
   loadingIndicator: { marginVertical: 8 },
   vaultRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   vaultSlot: { alignItems: 'center', gap: 6 },
-  vaultCircle: { width: 96, height: 96, borderRadius: 48, overflow: 'hidden' },
+  vaultCircle: { width: 96, height: 96, borderRadius: 48 },
   primaryRing: { borderWidth: 3, borderColor: '#9d3d2c' },
+  vaultPhotoWrap: { flex: 1, borderRadius: 48, overflow: 'hidden', margin: 2 },
   vaultPhoto: { width: '100%', height: '100%' },
   vaultLabel: { fontSize: 11, color: '#56423e' },
 

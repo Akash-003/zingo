@@ -46,10 +46,11 @@ export function useUserProfile() {
 
   const _applyPrimaryPhoto = async (url: string) => {
     if (!uid) return;
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ primary_photo_url: url })
       .eq('id', uid);
+    if (error) throw error;
     setPrimaryPhotoUrl(url);
   };
 
