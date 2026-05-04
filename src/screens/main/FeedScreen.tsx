@@ -96,7 +96,7 @@ export default function FeedScreen() {
   const snapOffsets = cards.map((_, i) => FEED_PADDING_TOP + i * slotHeight);
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.searchBar}>
@@ -134,6 +134,7 @@ export default function FeedScreen() {
           data={cards}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <CardItem card={item} itemWidth={itemWidth} />}
+
           contentContainerStyle={styles.feedContent}
           showsVerticalScrollIndicator={false}
           snapToOffsets={snapOffsets}
