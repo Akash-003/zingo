@@ -1,5 +1,5 @@
 import { View, TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ActionButtonsProps {
   onShare: () => Promise<void>;
@@ -9,6 +9,13 @@ interface ActionButtonsProps {
   loading?: boolean;
 }
 
+const BUTTONS = [
+  { key: 'share',   icon: 'share-social-outline' as const, label: 'Share'    },
+  { key: 'save',    icon: 'download-outline'      as const, label: 'Save'     },
+  { key: 'photo',   icon: 'camera-outline'        as const, label: 'Photo'    },
+  { key: 'name',    icon: 'pencil-outline'        as const, label: 'Name'     },
+] as const;
+
 export default function ActionButtons({
   onShare,
   onDownload,
@@ -16,107 +23,53 @@ export default function ActionButtons({
   onEditName,
   loading = false,
 }: ActionButtonsProps) {
+  const handlers: Record<typeof BUTTONS[number]['key'], () => void> = {
+    share:  onShare,
+    save:   onDownload,
+    photo:  onChangePhoto,
+    name:   onEditName,
+  };
+
   return (
     <View style={styles.container}>
-      {/* Share + Download */}
-      <View style={styles.row}>
-        <LinearGradient
-          colors={['#1565c0', '#1e88e5']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.gradientBtn}
-        >
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={onShare}
-            activeOpacity={0.85}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.btnText}>↑ SHARE</Text>
-            )}
-          </TouchableOpacity>
-        </LinearGradient>
-
-        <LinearGradient
-          colors={['#b71c1c', '#e53935']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.gradientBtn}
-        >
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={onDownload}
-            activeOpacity={0.85}
-            disabled={loading}
-          >
-            <Text style={styles.btnText}>↓ DOWNLOAD</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
-
-      {/* Change Photo + Edit Name */}
-      <View style={styles.row}>
+      {BUTTONS.map(({ key, icon, label }) => (
         <TouchableOpacity
-          style={styles.outlinedBtn}
-          onPress={onChangePhoto}
-          activeOpacity={0.75}
+          key={key}
+          style={styles.btn}
+          onPress={handlers[key]}
+          activeOpacity={0.7}
+          disabled={loading && (key === 'share' || key === 'save')}
         >
-          <Text style={styles.outlinedBtnText}>Change Photo</Text>
+          {loading && key === 'share' ? (
+            <ActivityIndicator size="small" color="#9d3d2c" />
+          ) : (
+            <Ionicons
+              name={icon}
+              size={22}
+              color="#9d3d2c"
+            />
+          )}
+          <Text style={styles.label}>{label}</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.outlinedBtn}
-          onPress={onEditName}
-          activeOpacity={0.75}
-        >
-          <Text style={styles.outlinedBtnText}>Edit Name</Text>
-        </TouchableOpacity>
-      </View>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 10,
-    paddingTop: 12,
-  },
-  row: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  gradientBtn: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   btn: {
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnText: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-  },
-  outlinedBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#89726d',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    gap: 4,
   },
-  outlinedBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
+  label: {
+    fontSize: 11,
     color: '#56423e',
+    fontWeight: '500',
   },
 });

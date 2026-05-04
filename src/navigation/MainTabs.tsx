@@ -11,7 +11,7 @@ export default function MainTabs() {
   return (
     <Tab.Navigator
       tabBar={(props) => <BottomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, tabBarStyle: { backgroundColor: '#fcf9f4' } }}
     >
       <Tab.Screen name="Discover" component={FeedScreen} />
       <Tab.Screen name="Create" component={CreateScreen} />
