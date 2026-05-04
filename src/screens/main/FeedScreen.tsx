@@ -78,7 +78,7 @@ const ACTION_BUTTONS_HEIGHT = 80;
 // Gap between cards in feedContent
 const FEED_GAP = 48;
 // Top padding of feedContent
-const FEED_PADDING_TOP = 16;
+const FEED_PADDING_TOP = 12;
 
 export default function FeedScreen() {
   const { width } = useWindowDimensions();
@@ -93,7 +93,7 @@ export default function FeedScreen() {
 
   const cardHeight = itemWidth * (3 / 2);
   const slotHeight = cardHeight + ACTION_BUTTONS_HEIGHT + FEED_GAP;
-  const snapOffsets = cards.map((_, i) => FEED_PADDING_TOP + i * slotHeight);
+  const snapOffsets = cards.map((_, i) => i * slotHeight);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   feedContent: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: FEED_PADDING_TOP,
     paddingBottom: ACTION_BUTTONS_HEIGHT + 4,
     gap: 48,
   },
