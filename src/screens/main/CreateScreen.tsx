@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,14 +30,12 @@ const CATEGORIES = [
 
 interface SlotPos { x: number; y: number }
 
-const DEFAULT_PHOTO: SlotPos = { x: PREVIEW_WIDTH / 2 - 50, y: PREVIEW_WIDTH * 0.2 - 50 };
-const DEFAULT_NAME: SlotPos  = { x: PREVIEW_WIDTH / 2 - 60, y: PREVIEW_WIDTH * 0.85 };
-
 export default function CreateScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageRatio, setImageRatio] = useState(1);
-  const [photoPos, setPhotoPos] = useState<SlotPos>(DEFAULT_PHOTO);
-  const [namePos, setNamePos] = useState<SlotPos>(DEFAULT_NAME);
+  // Fix 1: initial fallbacks — replaced by resetHandles() after image pick
+  const [photoPos, setPhotoPos] = useState<SlotPos>({ x: PREVIEW_WIDTH / 2 - 50, y: 80 });
+  const [namePos, setNamePos] = useState<SlotPos>({ x: PREVIEW_WIDTH / 2 - 60, y: 300 });
   const [circleSize, setCircleSize] = useState(100);
   const [category, setCategory] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(false);
@@ -48,6 +46,15 @@ export default function CreateScreen() {
   const name = useUserStore((s) => s.name);
 
   const previewHeight = PREVIEW_WIDTH * imageRatio;
+
+  const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
+
+  // Fix 1: compute default positions from actual previewHeight at pick time
+  const resetHandles = (ph: number) => {
+    setPhotoPos({ x: PREVIEW_WIDTH / 2 - 50, y: ph * 0.2 - 50 });
+    setNamePos({ x: PREVIEW_WIDTH / 2 - 60, y: ph * 0.85 });
+    setCircleSize(100);
+  };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -62,75 +69,55 @@ export default function CreateScreen() {
     });
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
+    // Fix 1: compute ratio first, then reset handles with the real preview height
+    const ratio = (asset.width && asset.height) ? asset.height / asset.width : 1;
     setImageUri(asset.uri);
-    if (asset.width && asset.height) {
-      setImageRatio(asset.height / asset.width);
-    }
-    resetHandles();
+    setImageRatio(ratio);
+    resetHandles(PREVIEW_WIDTH * ratio);
   };
 
-  const resetHandles = () => {
-    setPhotoPos(DEFAULT_PHOTO);
-    setNamePos(DEFAULT_NAME);
-    setCircleSize(100);
-  };
+  // Fix 2: refs holding live values so the persistent PanResponder always reads current state
+  const circleSizeRef = useRef(circleSize);
+  const previewHeightRef = useRef(previewHeight);
+  const photoPosRef = useRef(photoPos);
+  const namePosRef = useRef(namePos);
 
-  const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
+  const photoStartRef = useRef({ x: 0, y: 0 });
+  const nameStartRef = useRef({ x: 0, y: 0 });
 
-  // Fix: snapshot position on grant to avoid dx/dy cumulative drift
-  const makePhotoResponder = useCallback(() => {
-    let startX = 0;
-    let startY = 0;
-    return PanResponder.create({
+  // Fix 2: single persistent PanResponder instances — created once, always read from refs
+  const photoResponder = useRef(
+    PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        setPhotoPos((prev) => {
-          startX = prev.x;
-          startY = prev.y;
-          return prev;
-        });
+        photoStartRef.current = { ...photoPosRef.current };
       },
       onPanResponderMove: (_, gs) => {
+        const size = circleSizeRef.current;
+        const ph = previewHeightRef.current;
         setPhotoPos({
-          x: clamp(startX + gs.dx, 0, PREVIEW_WIDTH - circleSize),
-          y: clamp(startY + gs.dy, 0, previewHeight - circleSize),
+          x: clamp(photoStartRef.current.x + gs.dx, 0, PREVIEW_WIDTH - size),
+          y: clamp(photoStartRef.current.y + gs.dy, 0, ph - size),
         });
       },
-    });
-  }, [circleSize, previewHeight]);
+    })
+  ).current;
 
-  const makeNameResponder = useCallback(() => {
-    let startX = 0;
-    let startY = 0;
-    return PanResponder.create({
+  const nameResponder = useRef(
+    PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        setNamePos((prev) => {
-          startX = prev.x;
-          startY = prev.y;
-          return prev;
-        });
+        nameStartRef.current = { ...namePosRef.current };
       },
       onPanResponderMove: (_, gs) => {
+        const ph = previewHeightRef.current;
         setNamePos({
-          x: clamp(startX + gs.dx, 0, PREVIEW_WIDTH - 120),
-          y: clamp(startY + gs.dy, 0, previewHeight - 32),
+          x: clamp(nameStartRef.current.x + gs.dx, 0, PREVIEW_WIDTH - 120),
+          y: clamp(nameStartRef.current.y + gs.dy, 0, ph - 32),
         });
       },
-    });
-  }, [previewHeight]);
-
-  // Fix: use ref objects (not .current frozen value) so responders update when deps change
-  const photoResponder = useRef(makePhotoResponder());
-  const nameResponder  = useRef(makeNameResponder());
-
-  useEffect(() => {
-    photoResponder.current = makePhotoResponder();
-  }, [makePhotoResponder]);
-
-  useEffect(() => {
-    nameResponder.current = makeNameResponder();
-  }, [makeNameResponder]);
+    })
+  ).current;
 
   const normalise = (previewCoord: number) => previewCoord * (CANVAS_WIDTH / PREVIEW_WIDTH);
 
@@ -192,8 +179,14 @@ export default function CreateScreen() {
     setCategory(null);
     setIsPublic(false);
     setPublished(false);
-    resetHandles();
+    resetHandles(PREVIEW_WIDTH);
   };
+
+  // Fix 2 + Fix 4: live-value sync effects after handlers, before return
+  useEffect(() => { circleSizeRef.current = circleSize; }, [circleSize]);
+  useEffect(() => { previewHeightRef.current = previewHeight; }, [previewHeight]);
+  useEffect(() => { photoPosRef.current = photoPos; }, [photoPos]);
+  useEffect(() => { namePosRef.current = namePos; }, [namePos]);
 
   if (published) {
     return (
@@ -251,7 +244,6 @@ export default function CreateScreen() {
             <Text style={styles.sectionTitle}>Position your photo & name</Text>
             <Text style={styles.sectionHint}>Drag the handles to reposition. Use the slider to resize your photo.</Text>
 
-            {/* Fix: canvas uses absolute positioning for image + handles to layer correctly */}
             <View style={[styles.canvas, { height: previewHeight }]}>
               <View style={styles.canvasImageWrapper} pointerEvents="none">
                 <Image
@@ -262,7 +254,7 @@ export default function CreateScreen() {
 
               {/* Photo handle */}
               <View
-                {...photoResponder.current.panHandlers}
+                {...photoResponder.panHandlers}
                 style={[
                   styles.photoHandle,
                   {
@@ -279,7 +271,7 @@ export default function CreateScreen() {
 
               {/* Name handle */}
               <View
-                {...nameResponder.current.panHandlers}
+                {...nameResponder.panHandlers}
                 style={[styles.nameHandle, { left: namePos.x, top: namePos.y }]}
               >
                 <Text style={styles.nameHandleText}>{name || 'Your Name'}</Text>
@@ -298,7 +290,7 @@ export default function CreateScreen() {
               thumbTintColor="#9d3d2c"
             />
 
-            <TouchableOpacity style={styles.resetBtn} onPress={resetHandles}>
+            <TouchableOpacity style={styles.resetBtn} onPress={() => resetHandles(previewHeight)}>
               <Text style={styles.resetBtnText}>Reset positions</Text>
             </TouchableOpacity>
           </View>
@@ -392,13 +384,12 @@ const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1c1c19', marginBottom: 4 },
   sectionHint: { fontSize: 13, color: '#89726d', marginBottom: 16 },
+  // Fix 3: removed `position: 'relative'` — no-op in React Native
   canvas: {
     width: PREVIEW_WIDTH,
     borderRadius: 12,
     overflow: 'hidden',
-    position: 'relative',
   },
-  // Fix: canvas image wrapper is absolutely positioned so handles layer on top correctly
   canvasImageWrapper: {
     position: 'absolute',
     top: 0,
