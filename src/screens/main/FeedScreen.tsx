@@ -10,6 +10,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import QuoteCard from '../../components/cards/QuoteCard';
 import ActionButtons from '../../components/ActionButtons';
@@ -91,12 +92,14 @@ export default function FeedScreen() {
   const primaryPhotoUrl = useUserStore((s) => s.primaryPhotoUrl);
   const name = useUserStore((s) => s.name);
 
+
   const cardHeight = itemWidth * (3 / 2);
   const slotHeight = cardHeight + ACTION_BUTTONS_HEIGHT + FEED_GAP;
   const snapOffsets = cards.map((_, i) => i * slotHeight);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+      <StatusBar style="dark" backgroundColor="#ffffff" />
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.searchBar}>
@@ -156,7 +159,7 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#fcf9f4',
+    backgroundColor: '#ffffff',
   },
   header: {
     flexDirection: 'row',
@@ -229,6 +232,7 @@ const styles = StyleSheet.create({
     paddingTop: FEED_PADDING_TOP,
     paddingBottom: ACTION_BUTTONS_HEIGHT + 4,
     gap: 48,
+    backgroundColor: '#fcf9f4',
   },
   cardItem: {
     // width set dynamically
@@ -237,6 +241,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#fcf9f4',
   },
   emptyText: {
     fontSize: 15,
