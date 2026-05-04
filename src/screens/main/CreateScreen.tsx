@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
-import * as FileSystem from 'expo-file-system/legacy';
+import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -131,9 +131,7 @@ export default function CreateScreen() {
       const filename = `${Date.now()}.jpg`;
       const path = `${uid}/cards/${filename}`;
 
-      const base64 = await FileSystem.readAsStringAsync(imageUri, {
-        encoding: 'base64',
-      });
+      const base64 = await new File(imageUri).base64();
       const byteCharacters = atob(base64);
       const byteArray = new Uint8Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
