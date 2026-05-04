@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
+import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -130,13 +131,18 @@ export default function CreateScreen() {
       const filename = `${Date.now()}.jpg`;
       const path = `${uid}/cards/${filename}`;
 
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-      const arrayBuffer = await new Response(blob).arrayBuffer();
+      const base64 = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: 'base64',
+      });
+      const byteCharacters = atob(base64);
+      const byteArray = new Uint8Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteArray[i] = byteCharacters.charCodeAt(i);
+      }
 
       const { error: uploadError } = await supabase.storage
         .from('user-photos')
-        .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: false });
+        .upload(path, byteArray, { contentType: 'image/jpeg', upsert: false });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('user-photos').getPublicUrl(path);
