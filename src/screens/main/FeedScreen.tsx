@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import {
   View,
   FlatList,
@@ -83,7 +82,6 @@ const FEED_PADDING_TOP = 16;
 
 export default function FeedScreen() {
   const { width } = useWindowDimensions();
-  const tabBarHeight = useBottomTabBarHeight();
   const itemWidth = width - 32;
 
   const cards = useCardsStore((s) => s.cards);
@@ -136,7 +134,7 @@ export default function FeedScreen() {
           data={cards}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <CardItem card={item} itemWidth={itemWidth} />}
-          contentContainerStyle={[styles.feedContent, { paddingBottom: tabBarHeight + 16 }]}
+          contentContainerStyle={styles.feedContent}
           showsVerticalScrollIndicator={false}
           snapToOffsets={snapOffsets}
           snapToAlignment="start"
@@ -228,6 +226,7 @@ const styles = StyleSheet.create({
   feedContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: ACTION_BUTTONS_HEIGHT,
     gap: 48,
   },
   cardItem: {
