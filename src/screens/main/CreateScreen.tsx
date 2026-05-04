@@ -21,7 +21,7 @@ import { useUserStore } from '../../store/userStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PREVIEW_WIDTH = SCREEN_WIDTH - 32;
-const PREVIEW_HEIGHT = PREVIEW_WIDTH * (3 / 2); // fixed 2:3 card ratio, matches 400×600 canvas
+const PREVIEW_HEIGHT = PREVIEW_WIDTH * (3 / 2); // fixed 2:3, matches 400×600 canvas
 const CANVAS_WIDTH = 400;
 
 const CATEGORIES = [
@@ -29,30 +29,40 @@ const CATEGORIES = [
   'festivals', 'shayari', 'devotional', 'friendship', 'life',
 ];
 
+const NAME_COLORS = ['#ffffff', '#000000', '#FFD700', '#FF5252', '#69F0AE', '#40C4FF', '#FF80AB', '#E0E0E0'];
+
+const STEPS = [
+  { icon: 'image-outline' as const, label: 'Pick a greeting card image' },
+  { icon: 'move-outline' as const, label: 'Position your photo & name on the card' },
+  { icon: 'send-outline' as const, label: 'Set visibility and publish' },
+];
+
 interface SlotPos { x: number; y: number }
 
 export default function CreateScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
-  // initial fallbacks — replaced by resetHandles() after image pick
   const [photoPos, setPhotoPos] = useState<SlotPos>({ x: PREVIEW_WIDTH / 2 - 50, y: 80 });
   const [namePos, setNamePos] = useState<SlotPos>({ x: PREVIEW_WIDTH / 2 - 60, y: 300 });
   const [circleSize, setCircleSize] = useState(100);
+  const [nameColor, setNameColor] = useState('#ffffff');
+  const [nameFontSize, setNameFontSize] = useState(18);
+  const [nameBold, setNameBold] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [published, setPublished] = useState(false);
 
   const uid = useUserStore((s) => s.uid);
   const name = useUserStore((s) => s.name);
 
-
   const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
 
-  // Fix 1: compute default positions from actual PREVIEW_HEIGHT at pick time
-  const resetHandles = (ph: number) => {
-    setPhotoPos({ x: PREVIEW_WIDTH / 2 - 50, y: ph * 0.2 - 50 });
-    setNamePos({ x: PREVIEW_WIDTH / 2 - 60, y: ph * 0.85 });
+  const resetHandles = () => {
+    setPhotoPos({ x: PREVIEW_WIDTH / 2 - 50, y: PREVIEW_HEIGHT * 0.2 - 50 });
+    setNamePos({ x: PREVIEW_WIDTH / 2 - 60, y: PREVIEW_HEIGHT * 0.85 });
     setCircleSize(100);
+    setNameColor('#ffffff');
+    setNameFontSize(18);
+    setNameBold(false);
   };
 
   const pickImage = async () => {
@@ -68,20 +78,18 @@ export default function CreateScreen() {
       quality: 0.9,
     });
     if (result.canceled || !result.assets[0]) return;
-    const asset = result.assets[0];
-    setImageUri(asset.uri);
-    resetHandles(PREVIEW_HEIGHT);
+    setImageUri(result.assets[0].uri);
+    resetHandles();
   };
 
-  // Fix 2: refs holding live values so the persistent PanResponder always reads current state
+  // Live-value refs so the persistent PanResponder always reads current state
   const circleSizeRef = useRef(circleSize);
   const photoPosRef = useRef(photoPos);
   const namePosRef = useRef(namePos);
-
   const photoStartRef = useRef({ x: 0, y: 0 });
   const nameStartRef = useRef({ x: 0, y: 0 });
 
-  // Fix 2: single persistent PanResponder instances — created once, always read from refs
+  // Single persistent PanResponder instances — created once, read from refs
   const photoResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -144,8 +152,9 @@ export default function CreateScreen() {
       const nameSlot = {
         top: Math.round(normalise(namePos.y)),
         left: Math.round(normalise(namePos.x)),
-        fontSize: 18,
-        color: '#ffffff',
+        fontSize: nameFontSize,
+        color: nameColor,
+        fontWeight: nameBold ? 'bold' : 'normal',
       };
 
       const { error: insertError } = await supabase.from('cards').insert({
@@ -159,7 +168,13 @@ export default function CreateScreen() {
       });
       if (insertError) throw insertError;
 
-      setPublished(true);
+      // Reset to default state and show a brief confirmation
+      const msg = isPublic ? 'Your card is live in the community feed.' : 'Your card has been saved privately.';
+      setImageUri(null);
+      setCategory(null);
+      setIsPublic(false);
+      resetHandles();
+      Alert.alert('Card Published!', msg);
     } catch {
       Alert.alert('Publish failed', 'Could not publish your card. Please try again.');
     } finally {
@@ -167,35 +182,10 @@ export default function CreateScreen() {
     }
   };
 
-  const reset = () => {
-    setImageUri(null);
-    setCategory(null);
-    setIsPublic(false);
-    setPublished(false);
-    resetHandles(PREVIEW_HEIGHT);
-  };
-
-  // Fix 2 + Fix 4: live-value sync effects after handlers, before return
+  // Sync live-value refs after handlers
   useEffect(() => { circleSizeRef.current = circleSize; }, [circleSize]);
   useEffect(() => { photoPosRef.current = photoPos; }, [photoPos]);
   useEffect(() => { namePosRef.current = namePos; }, [namePos]);
-
-  if (published) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.successContainer}>
-          <Ionicons name="checkmark-circle" size={72} color="#9d3d2c" />
-          <Text style={styles.successTitle}>Card Published!</Text>
-          <Text style={styles.successSub}>
-            {isPublic ? 'Your card is live in the community feed.' : 'Your card is saved privately.'}
-          </Text>
-          <TouchableOpacity style={styles.ctaBtn} onPress={reset}>
-            <Text style={styles.ctaBtnText}>Create Another</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -206,136 +196,180 @@ export default function CreateScreen() {
       >
         <Text style={styles.heading}>Create a Card</Text>
 
-        {/* Phase 1 — Pick Image */}
-        <TouchableOpacity
-          style={styles.pickZone}
-          onPress={pickImage}
-          activeOpacity={0.7}
-        >
-          {imageUri ? (
-            <>
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.pickImage}
-              />
-              <TouchableOpacity style={styles.changeBtn} onPress={pickImage}>
-                <Text style={styles.changeBtnText}>Change</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <View style={styles.pickPlaceholder}>
-              <Ionicons name="image-outline" size={48} color="#89726d" />
-              <Text style={styles.pickLabel}>Tap to pick a greeting image</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        {/* Canvas — shows placeholder when no image, drag canvas when image picked */}
+        {imageUri ? (
+          <View style={styles.canvas}>
+            <Image source={{ uri: imageUri }} style={styles.canvasImage} />
 
-        {/* Phase 2 — Position Slots */}
-        {imageUri && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Position your photo & name</Text>
-            <Text style={styles.sectionHint}>Drag the handles to reposition. Use the slider to resize your photo.</Text>
-
-            <View style={styles.canvas}>
-              <View style={styles.canvasImageWrapper} pointerEvents="none">
-                <Image
-                  source={{ uri: imageUri }}
-                  style={styles.canvasImage}
-                />
-              </View>
-
-              {/* Photo handle */}
-              <View
-                {...photoResponder.panHandlers}
-                style={[
-                  styles.photoHandle,
-                  {
-                    left: photoPos.x,
-                    top: photoPos.y,
-                    width: circleSize,
-                    height: circleSize,
-                    borderRadius: circleSize / 2,
-                  },
-                ]}
-              >
-                <Ionicons name="person" size={circleSize * 0.45} color="#fff" />
-              </View>
-
-              {/* Name handle */}
-              <View
-                {...nameResponder.panHandlers}
-                style={[styles.nameHandle, { left: namePos.x, top: namePos.y }]}
-              >
-                <Text style={styles.nameHandleText}>{name || 'Your Name'}</Text>
-              </View>
+            {/* Photo handle */}
+            <View
+              {...photoResponder.panHandlers}
+              style={[
+                styles.photoHandle,
+                {
+                  left: photoPos.x,
+                  top: photoPos.y,
+                  width: circleSize,
+                  height: circleSize,
+                  borderRadius: circleSize / 2,
+                },
+              ]}
+            >
+              <Ionicons name="person" size={circleSize * 0.45} color="#fff" />
             </View>
 
-            <Text style={styles.sliderLabel}>Photo size: {Math.round(circleSize)}px</Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={60}
-              maximumValue={160}
-              value={circleSize}
-              onValueChange={setCircleSize}
-              minimumTrackTintColor="#9d3d2c"
-              maximumTrackTintColor="#e8e0d8"
-              thumbTintColor="#9d3d2c"
-            />
+            {/* Name handle */}
+            <View
+              {...nameResponder.panHandlers}
+              style={[styles.nameHandle, { left: namePos.x, top: namePos.y }]}
+            >
+              <Text style={{ color: nameColor, fontSize: nameFontSize, fontWeight: nameBold ? 'bold' : 'normal' }}>
+                {name || 'Your Name'}
+              </Text>
+            </View>
 
-            <TouchableOpacity style={styles.resetBtn} onPress={() => resetHandles(PREVIEW_HEIGHT)}>
-              <Text style={styles.resetBtnText}>Reset positions</Text>
+            {/* Change image overlay */}
+            <TouchableOpacity style={styles.changeBtn} onPress={pickImage}>
+              <Ionicons name="image-outline" size={14} color="#fff" />
+              <Text style={styles.changeBtnText}>Change</Text>
             </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.pickZone} onPress={pickImage} activeOpacity={0.7}>
+            <Ionicons name="add-circle-outline" size={52} color="#9d3d2c" />
+            <Text style={styles.pickTitle}>Upload Card Image</Text>
+            <Text style={styles.pickLabel}>Tap to choose from your gallery</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Step hints — shown only on empty state */}
+        {!imageUri && (
+          <View style={styles.stepsCard}>
+            <Text style={styles.stepsHeading}>How it works</Text>
+            {STEPS.map((step, i) => (
+              <View key={step.label} style={styles.stepRow}>
+                <View style={styles.stepNum}>
+                  <Text style={styles.stepNumText}>{i + 1}</Text>
+                </View>
+                <Ionicons name={step.icon} size={18} color="#9d3d2c" style={styles.stepIcon} />
+                <Text style={styles.stepLabel}>{step.label}</Text>
+              </View>
+            ))}
           </View>
         )}
 
-        {/* Phase 3 — Publish Settings */}
+        {/* Controls — shown only when image is picked */}
         {imageUri && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Publish Settings</Text>
-
-            <Text style={styles.fieldLabel}>Category (optional)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
-              {CATEGORIES.map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[styles.chip, category === cat && styles.chipActive]}
-                  onPress={() => setCategory(category === cat ? null : cat)}
-                >
-                  <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>
-                    {cat.replace(/-/g, ' ')}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            <Text style={styles.fieldLabel}>Visibility</Text>
-            <View style={styles.visibilityRow}>
-              <TouchableOpacity
-                style={[styles.visBtn, !isPublic && styles.visBtnActive]}
-                onPress={() => setIsPublic(false)}
-              >
-                <Text style={[styles.visBtnText, !isPublic && styles.visBtnTextActive]}>My Cards</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.visBtn, isPublic && styles.visBtnActive]}
-                onPress={() => setIsPublic(true)}
-              >
-                <Text style={[styles.visBtnText, isPublic && styles.visBtnTextActive]}>Community</Text>
+          <>
+            {/* Photo size */}
+            <View style={styles.controlSection}>
+              <Text style={styles.controlLabel}>Photo size: {Math.round(circleSize)}px</Text>
+              <Slider
+                style={styles.slider}
+                minimumValue={60}
+                maximumValue={160}
+                value={circleSize}
+                onValueChange={setCircleSize}
+                minimumTrackTintColor="#9d3d2c"
+                maximumTrackTintColor="#e8e0d8"
+                thumbTintColor="#9d3d2c"
+              />
+              <TouchableOpacity style={styles.resetBtn} onPress={resetHandles}>
+                <Text style={styles.resetBtnText}>Reset positions</Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={[styles.ctaBtn, publishing && styles.ctaBtnDisabled]}
-              onPress={publish}
-              disabled={publishing}
-            >
-              {publishing ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.ctaBtnText}>Publish Card</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+            {/* Name style */}
+            <View style={styles.controlSection}>
+              <Text style={styles.sectionTitle}>Name Style</Text>
+
+              <Text style={styles.controlLabel}>Color</Text>
+              <View style={styles.colorRow}>
+                {NAME_COLORS.map((c) => (
+                  <TouchableOpacity
+                    key={c}
+                    style={[styles.colorSwatch, { backgroundColor: c }, nameColor === c && styles.colorSwatchActive]}
+                    onPress={() => setNameColor(c)}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.controlLabel}>Font size: {Math.round(nameFontSize)}px</Text>
+              <Slider
+                style={styles.slider}
+                minimumValue={12}
+                maximumValue={36}
+                value={nameFontSize}
+                onValueChange={setNameFontSize}
+                minimumTrackTintColor="#9d3d2c"
+                maximumTrackTintColor="#e8e0d8"
+                thumbTintColor="#9d3d2c"
+              />
+
+              <View style={styles.weightRow}>
+                <TouchableOpacity
+                  style={[styles.weightBtn, !nameBold && styles.weightBtnActive]}
+                  onPress={() => setNameBold(false)}
+                >
+                  <Text style={[styles.weightBtnText, !nameBold && styles.weightBtnTextActive]}>Normal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.weightBtn, nameBold && styles.weightBtnActive]}
+                  onPress={() => setNameBold(true)}
+                >
+                  <Text style={[styles.weightBtnText, nameBold && styles.weightBtnTextActive, styles.boldText]}>Bold</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Publish settings */}
+            <View style={styles.controlSection}>
+              <Text style={styles.sectionTitle}>Publish Settings</Text>
+
+              <Text style={styles.controlLabel}>Category (optional)</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
+                {CATEGORIES.map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.chip, category === cat && styles.chipActive]}
+                    onPress={() => setCategory(category === cat ? null : cat)}
+                  >
+                    <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>
+                      {cat.replace(/-/g, ' ')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <Text style={styles.controlLabel}>Visibility</Text>
+              <View style={styles.visibilityRow}>
+                <TouchableOpacity
+                  style={[styles.visBtn, !isPublic && styles.visBtnActive]}
+                  onPress={() => setIsPublic(false)}
+                >
+                  <Text style={[styles.visBtnText, !isPublic && styles.visBtnTextActive]}>My Cards</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.visBtn, isPublic && styles.visBtnActive]}
+                  onPress={() => setIsPublic(true)}
+                >
+                  <Text style={[styles.visBtnText, isPublic && styles.visBtnTextActive]}>Community</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.ctaBtn, publishing && styles.ctaBtnDisabled]}
+                onPress={publish}
+                disabled={publishing}
+              >
+                {publishing ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.ctaBtnText}>Publish Card</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -348,49 +382,58 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 100 },
   heading: { fontSize: 24, fontWeight: '700', color: '#1c1c19', marginBottom: 20 },
 
-  // Phase 1
+  // Card zone
   pickZone: {
     width: PREVIEW_WIDTH,
     height: PREVIEW_HEIGHT,
     borderStyle: 'dashed',
     borderWidth: 2,
-    borderColor: '#89726d',
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 24,
+    borderColor: '#9d3d2c',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fdf8f5',
+    marginBottom: 20,
   },
-  pickImage: { width: PREVIEW_WIDTH, height: PREVIEW_HEIGHT },
-  pickPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  pickLabel: { fontSize: 14, color: '#89726d' },
-  changeBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  changeBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  pickTitle: { fontSize: 16, fontWeight: '700', color: '#9d3d2c' },
+  pickLabel: { fontSize: 13, color: '#89726d' },
 
-  // Phase 2
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1c1c19', marginBottom: 4 },
-  sectionHint: { fontSize: 13, color: '#89726d', marginBottom: 16 },
-  // Fix 3: removed `position: 'relative'` — no-op in React Native
+  // Step hints
+  stepsCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  stepsHeading: { fontSize: 14, fontWeight: '700', color: '#56423e', letterSpacing: 0.5 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  stepNum: {
+    width: 24, height: 24, borderRadius: 12,
+    backgroundColor: '#f0ede9',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  stepNumText: { fontSize: 12, fontWeight: '700', color: '#9d3d2c' },
+  stepIcon: { marginRight: -4 },
+  stepLabel: { flex: 1, fontSize: 14, color: '#1c1c19' },
+
+  // Canvas
   canvas: {
     width: PREVIEW_WIDTH,
     height: PREVIEW_HEIGHT,
-    borderRadius: 12,
+    borderRadius: 20,
     overflow: 'hidden',
+    marginBottom: 20,
   },
-  canvasImageWrapper: {
+  canvasImage: {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: PREVIEW_WIDTH,
-  },
-  canvasImage: {
     width: PREVIEW_WIDTH,
     height: PREVIEW_HEIGHT,
   },
@@ -402,20 +445,66 @@ const styles = StyleSheet.create({
   },
   nameHandle: {
     position: 'absolute',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  nameHandleText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  sliderLabel: { fontSize: 13, color: '#56423e', marginTop: 16, marginBottom: 4 },
-  slider: { width: PREVIEW_WIDTH, height: 40 },
-  resetBtn: { alignSelf: 'flex-start', marginTop: 4 },
+  changeBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  changeBtnText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+
+  // Controls
+  controlSection: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1c1c19', marginBottom: 12 },
+  controlLabel: { fontSize: 13, color: '#56423e', marginBottom: 4 },
+  slider: { width: PREVIEW_WIDTH - 32, height: 40, marginBottom: 8 },
+  resetBtn: { alignSelf: 'flex-start' },
   resetBtnText: { fontSize: 13, color: '#9d3d2c' },
 
-  // Phase 3
-  fieldLabel: { fontSize: 14, fontWeight: '600', color: '#1c1c19', marginBottom: 8 },
-  chips: { flexDirection: 'row', marginBottom: 20 },
+  // Color swatches
+  colorRow: { flexDirection: 'row', gap: 10, marginBottom: 16, marginTop: 4 },
+  colorSwatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: '#e0d8d0' },
+  colorSwatchActive: { borderWidth: 3, borderColor: '#9d3d2c' },
+
+  // Bold toggle
+  weightRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  weightBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: '#89726d',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  weightBtnActive: { backgroundColor: '#9d3d2c', borderColor: '#9d3d2c' },
+  weightBtnText: { fontSize: 14, color: '#89726d' },
+  weightBtnTextActive: { color: '#fff' },
+  boldText: { fontWeight: 'bold' },
+
+  // Category chips
+  chips: { marginBottom: 16 },
   chip: {
     borderWidth: 1,
     borderColor: '#89726d',
@@ -428,30 +517,20 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: '#9d3d2c', borderColor: '#9d3d2c' },
   chipText: { fontSize: 13, color: '#89726d', textTransform: 'capitalize' },
   chipTextActive: { color: '#fff' },
-  visibilityRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
+
+  // Visibility
+  visibilityRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   visBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 99,
-    borderWidth: 1,
-    borderColor: '#89726d',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flex: 1, paddingVertical: 12, borderRadius: 99,
+    borderWidth: 1, borderColor: '#89726d',
+    alignItems: 'center', backgroundColor: '#fff',
   },
   visBtnActive: { backgroundColor: '#9d3d2c', borderColor: '#9d3d2c' },
   visBtnText: { fontSize: 15, color: '#89726d', fontWeight: '600' },
   visBtnTextActive: { color: '#fff' },
-  ctaBtn: {
-    backgroundColor: '#9d3d2c',
-    borderRadius: 99,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
+
+  // CTA
+  ctaBtn: { backgroundColor: '#9d3d2c', borderRadius: 99, paddingVertical: 16, alignItems: 'center' },
   ctaBtnDisabled: { opacity: 0.6 },
   ctaBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-
-  // Success
-  successContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 },
-  successTitle: { fontSize: 28, fontWeight: '700', color: '#1c1c19' },
-  successSub: { fontSize: 15, color: '#89726d', textAlign: 'center' },
 });

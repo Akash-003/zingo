@@ -61,6 +61,7 @@ export default function QuoteCard({ card, user, cardRef, showWatermark }: QuoteC
               right: ns.right !== undefined ? ns.right * scale : undefined,
               fontSize: ns.fontSize * scale,
               color: ns.color,
+              fontWeight: ns.fontWeight ?? '600',
             },
           ]}
           numberOfLines={1}
@@ -91,7 +92,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   nameText: {
-    fontWeight: '600',
     textAlign: 'center',
   },
   watermark: {

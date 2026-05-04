@@ -16,6 +16,7 @@ export interface NameSlot {
   right?: number;
   fontSize: number;
   color: string;
+  fontWeight?: 'normal' | 'bold';
 }
 
 export interface Card {
