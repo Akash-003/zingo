@@ -73,8 +73,8 @@ function CardItem({ card, itemWidth }: CardItemProps) {
   );
 }
 
-// ActionButtons renders: paddingTop(10) + button(44) + paddingBottom(8) = 62px
-const ACTION_BUTTONS_HEIGHT = 62;
+// ActionButtons renders: paddingTop(20) + button(44) + paddingBottom(16) = 80px
+const ACTION_BUTTONS_HEIGHT = 80;
 // Gap between cards in feedContent
 const FEED_GAP = 48;
 // Top padding of feedContent
