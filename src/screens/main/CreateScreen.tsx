@@ -181,8 +181,9 @@ export default function CreateScreen() {
       setIsPublic(false);
       resetHandles();
       Alert.alert('Card Published!', msg);
-    } catch {
-      Alert.alert('Publish failed', 'Could not publish your card. Please try again.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
+      Alert.alert('Publish failed', msg);
     } finally {
       setPublishing(false);
     }
