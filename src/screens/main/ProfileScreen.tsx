@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Linking,
   Modal,
   ActivityIndicator,
   StyleSheet,
@@ -155,7 +156,13 @@ export default function ProfileScreen() {
             <TouchableOpacity
               key={row.label}
               style={styles.settingsRow}
-              onPress={() => Alert.alert('Coming soon')}
+              onPress={() => {
+                if (row.label === 'Notifications & Updates') {
+                  void Linking.openSettings();
+                } else {
+                  Alert.alert(row.label, 'This feature is coming soon.');
+                }
+              }}
               activeOpacity={0.7}
             >
               <View style={styles.settingsIcon}>

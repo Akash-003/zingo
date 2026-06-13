@@ -11,6 +11,7 @@ export function useCards() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const offset = useRef(0);
+  const loadingRef = useRef(false);
 
   const mapRow = (row: Record<string, unknown>): Card => ({
     id: row.id as string,
@@ -23,7 +24,8 @@ export function useCards() {
   });
 
   const fetchPage = async (reset: boolean) => {
-    if (loading) return;
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     setLoading(true);
 
     const from = reset ? 0 : offset.current;
@@ -40,6 +42,7 @@ export function useCards() {
     }
 
     const { data, error } = await query;
+    loadingRef.current = false;
     setLoading(false);
 
     if (error || !data) return;

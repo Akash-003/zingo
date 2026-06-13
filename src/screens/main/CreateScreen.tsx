@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 
 import { supabase } from '../../services/supabase';
+import { track } from '../../services/analytics';
 import { useUserStore } from '../../store/userStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -173,15 +174,15 @@ export default function CreateScreen() {
       if (insertError) throw insertError;
 
       // Reset to default state and show a brief confirmation
+      void track(uid, 'card_published', { category: category ?? undefined, is_premium: false });
       const msg = isPublic ? 'Your card is live in the community feed.' : 'Your card has been saved privately.';
       setImageUri(null);
       setCategory(null);
       setIsPublic(false);
       resetHandles();
       Alert.alert('Card Published!', msg);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : JSON.stringify(err);
-      Alert.alert('Publish failed', msg);
+    } catch {
+      Alert.alert('Publish failed', 'Could not publish your card. Please try again.');
     } finally {
       setPublishing(false);
     }
@@ -337,7 +338,11 @@ export default function CreateScreen() {
                   <TouchableOpacity
                     key={cat}
                     style={[styles.chip, category === cat && styles.chipActive]}
-                    onPress={() => setCategory(category === cat ? null : cat)}
+                    onPress={() => {
+                      const next = category === cat ? null : cat;
+                      setCategory(next);
+                      if (next) void track(uid, 'category_selected', { category: next });
+                    }}
                   >
                     <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>
                       {cat.replace(/-/g, ' ')}

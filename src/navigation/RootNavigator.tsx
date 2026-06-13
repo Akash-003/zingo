@@ -5,6 +5,7 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 import { useUserStore } from '../store/userStore';
 import { useUserProfile } from '../hooks/useUserProfile';
+import { registerForPushNotifications } from '../services/notifications';
 import AuthStack from './AuthStack';
 import MainTabs from './MainTabs';
 import ProfileSetupScreen from '../screens/auth/ProfileSetupScreen';
@@ -25,6 +26,7 @@ export default function RootNavigator() {
         setSession(s);
         if (s?.user) {
           setUid(s.user.id);
+          void registerForPushNotifications(s.user.id);
           fetchProfile(s.user.id).finally(() => setInitialising(false));
         } else {
           reset();

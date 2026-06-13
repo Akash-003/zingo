@@ -22,22 +22,22 @@ Reference app for inspiration: **Crafto** (https://crafto.app)
 
 ## 2. Tech Stack
 
-| Layer              | Tool                          | Notes                                              |
-|--------------------|-------------------------------|----------------------------------------------------|
-| Framework          | React Native + Expo (managed) | Use Expo SDK 51+. Avoid bare workflow.             |
-| Language           | TypeScript                    | Strict mode. No `any` types.                       |
-| Navigation         | React Navigation v6           | Stack + Bottom Tabs                                |
-| State Management   | Zustand                       | One store per domain (user, quotes, ui)            |
-| Auth               | Firebase Auth                 | Phone OTP + Google Sign-In + Anonymous             |
-| Database           | Firebase Firestore            | User profiles, saved cards, quote metadata         |
-| File Storage       | Firebase Storage              | User profile photos (bg-removed PNGs)              |
-| Image Compositing  | react-native-view-shot        | Captures card View as image for share/download     |
-| Background Removal | Remove.bg API                 | Removes photo background before placing on card    |
-| Sharing            | react-native-share            | Share composited image to WhatsApp, Instagram etc. |
-| Photo Picker       | expo-image-picker             | Camera + Gallery access                            |
-| Payments           | RevenueCat                    | Subscription management for iOS + Android          |
-| Push Notifications | Firebase Cloud Messaging      | Daily quote notifications                          |
-| Analytics          | Firebase Analytics            | Track shares, downloads, retention                 |
+| Layer              | Tool                              | Notes                                                  |
+|--------------------|-----------------------------------|--------------------------------------------------------|
+| Framework          | React Native + Expo (managed)     | Expo SDK 51+. Avoid bare workflow.                     |
+| Language           | TypeScript                        | Strict mode. No `any` types.                           |
+| Navigation         | React Navigation v6               | Stack + Bottom Tabs                                    |
+| State Management   | Zustand                           | One store per domain (user, cards, ui)                 |
+| Auth               | Supabase Auth                     | Google Sign-In + Anonymous only (phone deferred)       |
+| Database           | Supabase PostgreSQL               | profiles, cards, analytics_events tables               |
+| File Storage       | Supabase Storage                  | user-photos bucket (profile pics), cards bucket        |
+| Image Compositing  | react-native-view-shot            | Captures card View as image for share/download         |
+| Background Removal | Remove.bg API                     | Strips photo background before placing on card         |
+| Sharing            | expo-sharing + expo-media-library | Share/save composited image                            |
+| Photo Picker       | expo-image-picker                 | Camera + Gallery access                                |
+| Payments           | RevenueCat                        | Not yet implemented — Phase 5 last step                |
+| Push Notifications | expo-notifications                | Token stored in profiles.push_token                    |
+| Analytics          | Supabase (analytics_events table) | track() helper in src/services/analytics.ts            |
 
 ---
 
@@ -57,18 +57,18 @@ Every screen was designed in Stitch. Before building any screen component:
 
 ### Stitch → React Native conversion rules
 
-| HTML/CSS               | React Native equivalent                        |
-|------------------------|------------------------------------------------|
-| `div`                  | `View`                                         |
-| `p`, `span`, `h1–h6`  | `Text`                                         |
-| `img`                  | `Image`                                        |
-| `input`                | `TextInput`                                    |
-| `button`               | `TouchableOpacity` or `Pressable`              |
-| CSS `flexbox`          | RN StyleSheet flex (same concepts, no `px`)    |
-| CSS `border-radius`    | RN `borderRadius` (numeric, no `px`)           |
-| CSS class              | `StyleSheet.create({})` object                 |
-| CSS `position: absolute` | RN `position: 'absolute'`                   |
-| `overflow: hidden`     | RN `overflow: 'hidden'`                        |
+| HTML/CSS               | React Native equivalent                          |
+|------------------------|--------------------------------------------------|
+| `div`                  | `View`                                           |
+| `p`, `span`, `h1–h6`  | `Text`                                           |
+| `img`                  | `Image`                                          |
+| `input`                | `TextInput`                                      |
+| `button`               | `TouchableOpacity` or `Pressable`                |
+| CSS `flexbox`          | RN StyleSheet flex (same concepts, no `px`)      |
+| CSS `border-radius`    | RN `borderRadius` (numeric, no `px`)             |
+| CSS class              | `StyleSheet.create({})` object                   |
+| `position: absolute`   | RN `position: 'absolute'`                        |
+| `overflow: hidden`     | RN `overflow: 'hidden'`                          |
 | `box-shadow`           | RN `shadow*` props (iOS) + `elevation` (Android) |
 
 > Never use CSS strings in React Native. Always use StyleSheet.create().
@@ -81,75 +81,75 @@ Every screen was designed in Stitch. Before building any screen component:
 ```
 QuoteFlow/
 ├── CLAUDE.md                  ← You are here
-├── DESIGN.md                  ← Stitch design tokens (auto-generated, do not edit)
-├── app.json                   ← Expo config
+├── DESIGN.md                  ← Stitch design tokens (do not edit)
+├── app.config.js              ← Expo config (dynamic, reads from .env)
+├── eas.json                   ← EAS Build profiles (development/preview/production)
 ├── App.tsx                    ← Entry point, NavigationContainer
+├── supabase/
+│   └── migrations/            ← SQL migrations; apply with: npx supabase db push
 ├── src/
 │   ├── navigation/
-│   │   ├── RootNavigator.tsx  ← Auth vs Main stack switcher
-│   │   ├── AuthStack.tsx      ← Welcome → Phone → OTP → ProfileSetup
-│   │   └── MainStack.tsx      ← Feed → Create → Profile
+│   │   ├── RootNavigator.tsx  ← onAuthStateChange → Auth or MainTabs
+│   │   ├── AuthStack.tsx      ← Welcome → ProfileSetup
+│   │   └── MainTabs.tsx       ← Bottom tab nav: Feed / Create / Collections / Profile
 │   │
 │   ├── screens/
 │   │   ├── auth/
-│   │   │   ├── WelcomeScreen.tsx       ← Login options (Phone, Google, Guest)
-│   │   │   ├── PhoneEntryScreen.tsx    ← Phone number + country code input
-│   │   │   ├── OTPScreen.tsx           ← 6-digit OTP entry + resend
+│   │   │   ├── WelcomeScreen.tsx       ← Google + Guest login buttons
+│   │   │   ├── PhoneEntryScreen.tsx    ← Exists but not wired (phone auth deferred)
+│   │   │   ├── OTPScreen.tsx           ← Exists but not wired (phone auth deferred)
 │   │   │   └── ProfileSetupScreen.tsx  ← Name + photo + live card preview
 │   │   └── main/
-│   │       ├── FeedScreen.tsx          ← Main quote browsing screen
-│   │       ├── CreateScreen.tsx        ← Custom quote creator
-│   │       └── ProfileScreen.tsx       ← User profile + multiple photos
+│   │       ├── FeedScreen.tsx          ← Category chips + snapping card feed
+│   │       ├── CreateScreen.tsx        ← Upload card image + drag photo/name slots
+│   │       ├── CollectionsScreen.tsx   ← 2-column grid of user-created cards
+│   │       └── ProfileScreen.tsx       ← Identity Vault (up to 5 photos) + settings
 │   │
 │   ├── components/
 │   │   ├── cards/
-│   │   │   ├── QuoteCard.tsx           ← Core card renderer (bg + photo + quote + name)
-│   │   │   ├── CardPortraitStyle.tsx   ← User photo fills top of card
-│   │   │   └── CardCircleStyle.tsx     ← User photo in circular frame on card
+│   │   │   └── QuoteCard.tsx           ← Core renderer: card image + photo + name overlay
+│   │   ├── BottomTabBar.tsx            ← Custom tab bar component
 │   │   ├── CategoryChips.tsx           ← Horizontal scrollable filter chips
-│   │   ├── ActionButtons.tsx           ← Share / Download / Change Photo / Edit Name
-│   │   ├── PhotoUploader.tsx           ← Camera + Gallery picker with bg removal
-│   │   └── OTPInput.tsx                ← 6-box OTP input row
+│   │   ├── ActionButtons.tsx           ← Share / Save / Photo / Name buttons
+│   │   └── PhotoUploader.tsx           ← Image picker → Remove.bg → Supabase Storage
 │   │
 │   ├── hooks/
-│   │   ├── useAuth.ts                  ← Firebase auth state listener
-│   │   ├── useUserProfile.ts           ← Fetch/update user name, photos, primary photo
-│   │   ├── useQuotes.ts                ← Fetch quotes by category from Firestore
-│   │   └── useCardCapture.ts           ← react-native-view-shot capture + share logic
+│   │   ├── useAuth.ts                  ← Google OAuth + anonymous via Supabase
+│   │   ├── useUserProfile.ts           ← fetch/update name, photos, primaryPhoto, signOut
+│   │   ├── useCards.ts                 ← Paginated card fetch with useRef loading guard
+│   │   └── useCardCapture.ts           ← react-native-view-shot capture logic
 │   │
 │   ├── services/
-│   │   ├── firebase.ts                 ← Firebase app init (Auth, Firestore, Storage)
+│   │   ├── supabase.ts                 ← Supabase client init (reads from app.config.js extra)
+│   │   ├── analytics.ts                ← track(uid, event, props) → analytics_events table
+│   │   ├── notifications.ts            ← registerForPushNotifications(uid)
 │   │   ├── backgroundRemoval.ts        ← Remove.bg API integration
-│   │   └── sharing.ts                  ← Platform-specific share logic
+│   │   └── sharing.ts                  ← expo-sharing (share) + expo-media-library (save)
 │   │
 │   └── store/
-│       ├── userStore.ts                ← Zustand: uid, name, primaryPhoto, isPremium
-│       ├── quotesStore.ts              ← Zustand: current category, current card index
-│       └── uiStore.ts                  ← Zustand: loading states, modals
+│       ├── userStore.ts                ← uid, name, primaryPhotoUrl, photos[], isPremium
+│       ├── cardsStore.ts               ← currentCategory, cards[], appendCards (ID-deduped)
+│       └── uiStore.ts                  ← loading states, modals
 ```
 
 ---
 
 ## 5. Screen Inventory & Stitch Screen Mapping
 
-Map each screen to its Stitch design when building. Use `get_screen_image` first.
-
 | Screen File              | Screen Name          | Stitch Route     |
 |--------------------------|----------------------|------------------|
 | `WelcomeScreen.tsx`      | Welcome / Login      | `/welcome`       |
-| `PhoneEntryScreen.tsx`   | Phone Number Entry   | `/phone-entry`   |
-| `OTPScreen.tsx`          | OTP Verification     | `/otp`           |
 | `ProfileSetupScreen.tsx` | Profile Setup        | `/profile-setup` |
 | `FeedScreen.tsx`         | Main Feed            | `/feed`          |
-| `CardPortraitStyle.tsx`  | Card — Portrait      | `/card-portrait` |
-| `CardCircleStyle.tsx`    | Card — Circle Frame  | `/card-circle`   |
+| `CollectionsScreen.tsx`  | My Cards             | `/collections`   |
+| `CreateScreen.tsx`       | Create Card          | `/create`        |
 | `ProfileScreen.tsx`      | User Profile         | `/profile`       |
 
 ---
 
 ## 6. Core Feature — Photo Compositing
 
-This is the most important technical feature. Get this right first.
+This is the most important technical feature.
 
 ### How it works
 
@@ -158,134 +158,113 @@ User selects photo (expo-image-picker)
         ↓
 Remove.bg API strips background → returns transparent PNG
         ↓
-PNG stored in Firebase Storage → URL saved to Firestore user doc
+PNG stored in Supabase Storage (user-photos bucket) → URL saved to profiles table
         ↓
-QuoteCard component renders:
-  <View ref={cardRef}>                      ← captured by view-shot
-    <Image source={template.background} />  ← card background
-    <Image source={{ uri: userPhotoUrl }}   ← user photo (transparent PNG)
-           style={template.photoStyle} />   ← positioned per template
-    <Text style={template.quoteStyle}>      ← quote text
-      {quote}
-    </Text>
-    <Text style={template.nameStyle}>       ← user name
-      {userName}
+QuoteCard renders:
+  <View ref={cardRef} collapsable={false}>   ← collapsable=false required for view-shot
+    <Image source={{ uri: card.imageUrl }}   ← pre-designed server card image
+           style={StyleSheet.absoluteFill} />
+    <Image source={{ uri: user.primaryPhotoUrl }}  ← user photo, absolutely positioned
+           style={scaledPhotoSlot} />
+    <Text style={scaledNameSlot}>            ← user name, absolutely positioned
+      {user.name}
     </Text>
   </View>
         ↓
-react-native-view-shot captures entire View as a single image file
+react-native-view-shot captures the View as a PNG tmpfile
         ↓
-That captured image is what gets shared / downloaded
+That captured image is what gets shared / downloaded (watermark baked in for free users)
 ```
 
-### QuoteCard template schema
+### Card slot coordinate system
+
+All `photo_slot` and `name_slot` values in the DB are **authored at 400px canvas width**.
+`QuoteCard` applies `scale = renderedWidth / 400` at runtime. Never change DB slot values
+to match device screen widths.
 
 ```typescript
-interface CardTemplate {
-  id: string;
-  backgroundUrl: string;
-  photoStyle: {
-    position: 'absolute';
-    style: 'portrait' | 'circle';    // portrait = fills top, circle = circular frame
-    top?: number;
-    left?: number;
-    width: number;
-    height: number;
-    borderRadius?: number;           // 9999 for circle style
-  };
-  namePosition: {
-    position: 'absolute';
-    bottom: number;
-    left?: number;
-    right?: number;
-  };
-  quotePosition: {
-    position: 'absolute';
-    bottom: number;
-    left: number;
-    right: number;
-  };
+interface PhotoSlot {
+  style: 'portrait' | 'circle';
+  top: number; left: number; width: number; height: number;
+  borderRadius: number; // 9999 for circle, 0 for portrait fill
+}
+
+interface NameSlot {
+  top?: number; bottom?: number; left?: number; right?: number;
+  fontSize: number; color: string; fontWeight?: 'normal' | 'bold';
 }
 ```
 
-### Card capture and share
+### Paywall model
 
-```typescript
-// useCardCapture.ts
-const captureCard = async (cardRef: RefObject<View>): Promise<string> => {
-  const uri = await captureRef(cardRef, {
-    format: 'png',
-    quality: 1,
-    result: 'tmpfile',
-  });
-  return uri; // this is the shareable image
-};
-
-const shareToWhatsApp = async (uri: string, quote: string) => {
-  await Share.shareSingle({
-    url: uri,
-    message: quote,
-    social: Share.Social.WHATSAPP,
-    type: 'image/png',
-  });
-};
-```
+All content is free to browse. Premium = watermark-free sharing/downloading.
+Free users get `"Made with QuoteFlow"` baked onto every shared/saved image via
+`showWatermark={!isPremium}` on `QuoteCard`.
 
 ---
 
-## 7. Firebase Data Model
+## 7. Supabase Data Model
 
 ```
-/users/{uid}
-  name: string
-  primaryPhotoUrl: string          ← URL to bg-removed PNG in Storage
-  photos: string[]                 ← Array of all uploaded photo URLs
-  isPremium: boolean
-  premiumExpiry: timestamp | null
-  createdAt: timestamp
+profiles (id = auth.uid())
+  name text
+  primary_photo_url text
+  photos text[]
+  is_premium boolean default false
+  push_token text              ← Expo push token, set after permission granted
+  created_at timestamptz
 
-/quotes/{quoteId}
-  text: string
-  category: string                 ← 'good-morning' | 'motivational' | 'birthday' | ...
-  templateId: string               ← references /templates/{templateId}
-  isPremium: boolean
-  language: string                 ← 'en' | 'hi' | 'mr' etc.
-  createdAt: timestamp
+cards
+  id uuid
+  image_url text              ← pre-designed card image in Supabase Storage
+  category text               ← 'good-morning' | 'motivational' | 'love' | 'birthday' |
+                                  'good-night' | 'festivals' | 'shayari' | 'devotional' |
+                                  'friendship' | 'life'
+  is_premium boolean
+  is_public boolean           ← user-created cards can be public (community) or private
+  created_by uuid nullable    ← NULL for seed cards, uid for user-created cards
+  photo_slot jsonb            ← PhotoSlot (see above)
+  name_slot jsonb             ← NameSlot (see above)
+  created_at timestamptz
 
-/templates/{templateId}
-  backgroundUrl: string
-  photoStyle: CardTemplate['photoStyle']
-  namePosition: CardTemplate['namePosition']
-  quotePosition: CardTemplate['quotePosition']
-  previewUrl: string               ← thumbnail for template picker
+analytics_events
+  id uuid
+  uid uuid
+  event_name text             ← view_card | share_card | download_card | change_photo |
+                                  card_published | category_selected | paywall_shown |
+                                  purchase_completed
+  properties jsonb            ← { card_id?, category?, is_premium?, plan_id? }
+  created_at timestamptz
+  RLS: insert-only by owner (uid = auth.uid()). No client reads.
 ```
+
+Migrations live in `supabase/migrations/`. Apply with: `npx supabase db push`
 
 ---
 
 ## 8. Auth Flow
 
-Three entry paths, all leading to ProfileSetup:
-
 ```
 WelcomeScreen
-  ├── "Continue with Phone" → PhoneEntryScreen → OTPScreen → ProfileSetupScreen
-  ├── "Continue with Google" → Google OAuth → ProfileSetupScreen
-  └── "Continue as Guest" → Firebase anonymous sign-in → ProfileSetupScreen
+  ├── "Continue with Google" → Supabase OAuth via expo-web-browser → ProfileSetupScreen
+  └── "Continue as Guest"   → supabase.auth.signInAnonymously()   → ProfileSetupScreen
 
-ProfileSetupScreen → FeedScreen (main app)
+ProfileSetupScreen → MainTabs (Feed)
+
+RootNavigator logic:
+  no session     → AuthStack
+  session, no name set → ProfileSetupScreen (inline, not in stack)
+  session + name → MainTabs
 ```
 
-### Auth rules
-- Check `user.displayName` and `userStore.name` after login
-- If name is already set (returning user), skip ProfileSetup → go directly to Feed
-- Guest users CAN add name and photo — store in Firestore against their anonymous UID
-- If guest later upgrades to Google/Phone auth, merge their data by UID
+**Phone auth is deferred.** `PhoneEntryScreen` and `OTPScreen` exist but are not wired
+into navigation. Do not wire them without first enabling Supabase Phone Auth in the dashboard.
+
+On sign-in, `RootNavigator` also calls `registerForPushNotifications(uid)` — non-blocking.
 
 ---
 
 ## 9. Category System
-
-Categories are the horizontal chip filters on the Feed screen:
 
 ```typescript
 const CATEGORIES = [
@@ -303,26 +282,24 @@ const CATEGORIES = [
 ];
 ```
 
-- Active chip: filled with primary brand color
-- Inactive chips: outlined, white fill
-- Chips are horizontally scrollable (multiple rows in design, single scroll row in code is fine)
+Active chip: filled with primary brand color. Inactive: outlined, white fill. Horizontally scrollable.
 
 ---
 
 ## 10. Coding Conventions
 
 ### General
-- All components: functional, with TypeScript props interface defined above the component
+- All components: functional, TypeScript props interface defined above the component
 - No class components
-- No inline styles — always use `StyleSheet.create()`
+- No inline styles — always `StyleSheet.create()`
 - All async functions: try/catch with proper error handling
-- Loading states: always show an ActivityIndicator or skeleton
+- Loading states: always show `ActivityIndicator` or skeleton
 
 ### Naming
 - Screens: `PascalCase` + `Screen` suffix — e.g. `FeedScreen`
 - Components: `PascalCase` — e.g. `QuoteCard`
 - Hooks: `camelCase` + `use` prefix — e.g. `useUserProfile`
-- Store files: `camelCase` + `Store` suffix — e.g. `userStore`
+- Store files: `camelCase` + `Store` suffix — e.g. `cardsStore`
 - Services: `camelCase` — e.g. `backgroundRemoval`
 
 ### Component structure
@@ -339,51 +316,25 @@ const CATEGORIES = [
 // 5. Export default
 ```
 
-### Environment variables
-Store all secrets in `.env` (never commit):
-```
-REMOVE_BG_API_KEY=
-FIREBASE_API_KEY=
-FIREBASE_PROJECT_ID=
-REVENUECAT_API_KEY_IOS=
-REVENUECAT_API_KEY_ANDROID=
-```
-Access via `expo-constants` or `react-native-dotenv`.
-
 ---
 
-## 11. Build Order (Suggested Sequence)
+## 11. Phase Status
 
-Build in this order to avoid blockers:
+| Phase | Description               | Status      |
+|-------|---------------------------|-------------|
+| 1     | Foundation                | ✅ Complete |
+| 2     | Auth Screens              | ✅ Complete (Google + Anonymous; phone deferred) |
+| 3     | Core Feature (Feed/Cards) | ✅ Complete |
+| 4     | Supporting Screens        | ✅ Complete (Create, Profile, Collections) |
+| 5     | Monetization & Polish     | 🔄 In progress |
 
-```
-Phase 1 — Foundation
-  1. Project scaffold (Expo + TypeScript + React Navigation)
-  2. Firebase setup (Auth + Firestore + Storage)
-  3. Zustand stores (userStore, quotesStore, uiStore)
-
-Phase 2 — Auth Screens
-  4. WelcomeScreen (Phone + Google + Guest buttons)
-  5. PhoneEntryScreen + OTPScreen (Firebase Phone Auth)
-  6. ProfileSetupScreen (photo upload + bg removal + name + live preview)
-
-Phase 3 — Core Feature
-  7. QuoteCard component (bg + photo overlay + name)
-  8. CardPortraitStyle + CardCircleStyle variants
-  9. useCardCapture hook (view-shot capture)
-  10. FeedScreen (category chips + card + action buttons)
-  11. Share / Download flow
-
-Phase 4 — Supporting Screens
-  12. CreateScreen (wallpaper picker + custom text)
-  13. ProfileScreen (multiple photos + Set Primary)
-
-Phase 5 — Monetization & Polish
-  14. Paywall / RevenueCat integration
-  15. Push notifications
-  16. Analytics events
-  17. App Store + Play Store prep
-```
+**Phase 5 checklist:**
+- ✅ Analytics — `analytics_events` table + `track()` wired into all key actions
+- ✅ Push notifications — `expo-notifications`, token stored in `profiles.push_token`
+- ✅ EAS Build config — `eas.json` with development / preview / production profiles
+- ⬜ RevenueCat paywall — implement last; needs `src/services/revenuecat.ts` + `PaywallScreen.tsx`
+- ⬜ App icon / splash assets — `app.config.js` is wired; need design assets at `assets/`
+- ⬜ `EAS_PROJECT_ID` — run `eas init` to generate, then add to `.env`
 
 ---
 
@@ -399,12 +350,11 @@ npx expo run:ios
 # Run on Android emulator
 npx expo run:android
 
-# Install a new package
+# Install a package (always use expo install, not npm install, for Expo packages)
 npx expo install <package-name>
 
-# Check Stitch designs (MCP already configured)
-npx @_davideast/stitch-mcp view --projects
-npx @_davideast/stitch-mcp view --project <PROJECT_ID>
+# Apply Supabase migrations
+npx supabase db push
 
 # Type check
 npx tsc --noEmit
@@ -412,13 +362,70 @@ npx tsc --noEmit
 
 ---
 
-## 13. What NOT to Do
+## 13. Environment Variables
+
+Store all secrets in `.env` (never commit). Access via `expo-constants` (`Constants.expoConfig.extra`).
+
+```
+SUPABASE_URL=           ← Supabase project URL
+SUPABASE_ANON_KEY=      ← Supabase anon/public key
+REMOVE_BG_API_KEY=      ← remove.bg API key
+EAS_PROJECT_ID=         ← from `eas init`; required for Expo push notifications
+REVENUECAT_API_KEY_IOS=      ← Phase 5 (not yet wired)
+REVENUECAT_API_KEY_ANDROID=  ← Phase 5 (not yet wired)
+```
+
+---
+
+## 14. Technical Gotchas
+
+**FlatList pagination — use `useRef` not `useState` as loading guard.**
+`onEndReached` fires multiple times before React batches the state update. Pattern:
+```typescript
+const loadingRef = useRef(false);
+if (loadingRef.current) return;
+loadingRef.current = true;
+// ... fetch ...
+loadingRef.current = false;
+```
+Also deduplicate by ID in `appendCards` as a safety net against duplicate fetches.
+
+**Slot coordinate system** — All `photo_slot` / `name_slot` values are authored at 400px
+canvas width. `QuoteCard` applies `scale = renderedWidth / 400`. Never adjust DB values to
+match device dimensions.
+
+**FlatList viewability config must be stable.** `viewabilityConfig` must be a `useRef` (not
+an inline object) and `onViewableItemsChanged` must be wrapped in `useCallback`. Inline
+objects cause an infinite re-render loop.
+
+**expo-notifications handler** — SDK 0.29+ requires `shouldShowBanner` and `shouldShowList`
+alongside `shouldShowAlert` in `setNotificationHandler`. Omitting them causes a TypeScript
+error and runtime warning.
+
+**Cross-tab navigation** — From within a tab screen:
+```typescript
+navigation.navigate('Create' as never) // switches to Create tab
+```
+
+**Analytics — always fire-and-forget.** Never `await track()` in a UI event handler:
+```typescript
+void track(uid, 'share_card', { card_id: card.id });
+```
+
+**`collapsable={false}` on QuoteCard root View** — Required for `react-native-view-shot`
+to capture the View correctly on Android. Without it, the View may be optimized away.
+
+---
+
+## 15. What NOT to Do
 
 - ❌ Don't use CSS strings — always `StyleSheet.create()`
 - ❌ Don't use `any` TypeScript type — define proper interfaces
 - ❌ Don't store sensitive keys in code — use `.env`
-- ❌ Don't use `console.log` in production code — use a logger utility
+- ❌ Don't use `console.log` in production code
 - ❌ Don't share the raw photo URL — always share the composited card image
-- ❌ Don't skip background removal — the transparent PNG is essential for card compositing
-- ❌ Don't build a bottom tab nav on the Feed screen — action buttons replace navigation there
-- ❌ Don't forget to handle both iOS and Android share differences in `sharing.ts`
+- ❌ Don't skip background removal — the transparent PNG is essential for compositing
+- ❌ Don't use `npm install` for Expo packages — always `npx expo install`
+- ❌ Don't change DB slot values to match screen widths — apply scale in `QuoteCard` instead
+- ❌ Don't `await` analytics calls in UI handlers — use `void track(...)`
+- ❌ Don't wire phone auth without enabling it in Supabase dashboard first

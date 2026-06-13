@@ -55,6 +55,9 @@ export const useCardsStore = create<CardsState>((set) => ({
   setCurrentCardIndex: (currentCardIndex) => set({ currentCardIndex }),
   setCards: (cards) => set({ cards }),
   appendCards: (newCards) =>
-    set((state) => ({ cards: [...state.cards, ...newCards] })),
+    set((state) => {
+      const ids = new Set(state.cards.map((c) => c.id));
+      return { cards: [...state.cards, ...newCards.filter((c) => !ids.has(c.id))] };
+    }),
   reset: () => set(initialState),
 }));

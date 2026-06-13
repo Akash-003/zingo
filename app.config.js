@@ -31,11 +31,24 @@ export default {
       favicon: './assets/favicon.png',
     },
     scheme: 'quoteflow',
-    plugins: ['expo-web-browser'],
+    plugins: [
+      'expo-web-browser',
+      [
+        'expo-notifications',
+        {
+          icon: './assets/notification-icon.png',
+          color: '#9d3d2c',
+          androidMode: 'default',
+        },
+      ],
+    ],
     extra: {
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
       REMOVE_BG_API_KEY: process.env.REMOVE_BG_API_KEY,
+      eas: {
+        projectId: process.env.EAS_PROJECT_ID,
+      },
     },
   },
 };
