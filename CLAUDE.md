@@ -338,7 +338,79 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
 
 ---
 
-## 12. Key Commands
+## 12. Quick Start (New Developer Setup)
+
+### Prerequisites
+
+| Tool | Version | Install |
+|------|---------|---------|
+| Node.js | 20+ | https://nodejs.org |
+| Expo CLI | latest | `npm install -g expo-cli` |
+| Supabase CLI | latest | `brew install supabase/tap/supabase` |
+| EAS CLI | latest | `npm install -g eas-cli` |
+| iOS Simulator | — | Xcode (Mac only) |
+| Android Emulator | — | Android Studio |
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment
+
+```bash
+cp .env.example .env
+# Fill in values — see Section 13 for where to get each one
+```
+
+### 3. Apply database migrations
+
+```bash
+npx supabase login          # one-time auth
+npx supabase link           # link to your Supabase project
+npx supabase db push        # applies all migrations in supabase/migrations/
+```
+
+### 4. Run the app
+
+```bash
+npx expo start              # opens Expo dev tools
+# Then press i (iOS simulator) or a (Android emulator)
+```
+
+---
+
+## 13. Key Dependencies
+
+All installed — `npm install` is all you need. Listed here so intent is clear.
+
+| Package | Purpose |
+|---------|---------|
+| `expo ~54` | Managed workflow runtime |
+| `@supabase/supabase-js` | Auth + DB + Storage client |
+| `@react-navigation/native` + `bottom-tabs` + `native-stack` | Navigation |
+| `zustand` | Lightweight state management |
+| `react-native-view-shot` | Captures `<View>` as a PNG for share/download |
+| `expo-image-picker` | Camera + photo library access |
+| `expo-sharing` | System share sheet |
+| `expo-media-library` | Save to camera roll |
+| `expo-notifications` | Push notification token + local notifications |
+| `expo-web-browser` | OAuth redirect handling for Google Sign-In |
+| `expo-linking` | Deep link / redirect URL construction |
+| `expo-file-system` | File reads for binary upload to Supabase Storage |
+| `expo-linear-gradient` | Gradient backgrounds in UI |
+| `@expo/vector-icons` | Ionicons throughout the app |
+| `@react-native-community/slider` | Slider control in CreateScreen |
+| `react-native-url-polyfill` | Required by Supabase JS in React Native |
+| `@react-native-async-storage/async-storage` | Supabase session persistence |
+| `react-native-dotenv` + `dotenv` | `.env` → `process.env` in app.config.js |
+| `react-native-safe-area-context` | Safe area insets |
+| `react-native-screens` | Native screen containers for React Navigation |
+
+---
+
+## 14. Key Commands
 
 ```bash
 # Start dev server
@@ -358,26 +430,33 @@ npx supabase db push
 
 # Type check
 npx tsc --noEmit
+
+# Build for internal testing (generates APK/IPA via EAS)
+eas build --profile preview --platform android
+eas build --profile preview --platform ios
 ```
 
 ---
 
-## 13. Environment Variables
+## 16. Environment Variables
 
-Store all secrets in `.env` (never commit). Access via `expo-constants` (`Constants.expoConfig.extra`).
+Store all secrets in `.env` (never commit). Accessed in code via
+`Constants.expoConfig.extra` from `expo-constants`.
 
 ```
-SUPABASE_URL=           ← Supabase project URL
-SUPABASE_ANON_KEY=      ← Supabase anon/public key
-REMOVE_BG_API_KEY=      ← remove.bg API key
-EAS_PROJECT_ID=         ← from `eas init`; required for Expo push notifications
-REVENUECAT_API_KEY_IOS=      ← Phase 5 (not yet wired)
-REVENUECAT_API_KEY_ANDROID=  ← Phase 5 (not yet wired)
+SUPABASE_URL=           ← Supabase dashboard → Project Settings → API → Project URL
+SUPABASE_ANON_KEY=      ← Supabase dashboard → Project Settings → API → anon/public key
+REMOVE_BG_API_KEY=      ← https://www.remove.bg/dashboard#api-key (free tier = 50/month)
+EAS_PROJECT_ID=         ← run `eas init` in the project root; it writes this automatically
+REVENUECAT_API_KEY_IOS=      ← Phase 5, not yet wired
+REVENUECAT_API_KEY_ANDROID=  ← Phase 5, not yet wired
 ```
+
+A `.env.example` is checked into the repo — copy it to `.env` and fill in values.
 
 ---
 
-## 14. Technical Gotchas
+## 17. Technical Gotchas
 
 **FlatList pagination — use `useRef` not `useState` as loading guard.**
 `onEndReached` fires multiple times before React batches the state update. Pattern:
@@ -417,7 +496,7 @@ to capture the View correctly on Android. Without it, the View may be optimized 
 
 ---
 
-## 15. What NOT to Do
+## 18. What NOT to Do
 
 - ❌ Don't use CSS strings — always `StyleSheet.create()`
 - ❌ Don't use `any` TypeScript type — define proper interfaces
