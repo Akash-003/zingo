@@ -1,6 +1,6 @@
 import { FlatList, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 
-const CATEGORIES = [
+export const CATEGORIES = [
   { id: 'all', label: 'ALL' },
   { id: 'good-morning', label: 'Good Morning' },
   { id: 'motivational', label: 'Motivational' },

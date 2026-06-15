@@ -7,9 +7,10 @@ interface QuoteCardProps {
   user: { primaryPhotoUrl: string | null; name: string };
   cardRef: RefObject<View | null>;
   showWatermark: boolean;
+  width?: number;
 }
 
-export default function QuoteCard({ card, user, cardRef, showWatermark }: QuoteCardProps) {
+export default function QuoteCard({ card, user, cardRef, showWatermark, width }: QuoteCardProps) {
   const [cardWidth, setCardWidth] = useState(0);
   const scale = cardWidth > 0 ? cardWidth / 400 : 1;
 
@@ -19,7 +20,7 @@ export default function QuoteCard({ card, user, cardRef, showWatermark }: QuoteC
   return (
     <View
       ref={cardRef}
-      style={styles.container}
+      style={[styles.container, width !== undefined && { width }]}
       onLayout={(e) => setCardWidth(e.nativeEvent.layout.width)}
       collapsable={false}
     >

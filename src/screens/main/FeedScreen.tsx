@@ -10,6 +10,8 @@ import {
   Alert,
   Modal,
   KeyboardAvoidingView,
+  Keyboard,
+  ScrollView,
   Platform,
   StyleSheet,
   useWindowDimensions,
@@ -19,7 +21,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import QuoteCard from '../../components/cards/QuoteCard';
 import ActionButtons from '../../components/ActionButtons';
-import CategoryChips from '../../components/CategoryChips';
+import CategoryChips, { CATEGORIES } from '../../components/CategoryChips';
 import PhotoUploader from '../../components/PhotoUploader';
 import { useCards } from '../../hooks/useCards';
 import { useCardCapture } from '../../hooks/useCardCapture';
@@ -32,9 +34,12 @@ import { useUserStore } from '../../store/userStore';
 interface CardItemProps {
   card: Card;
   itemWidth: number;
+  itemHeight: number;
+  cardWidth: number;
+  onCardAreaLayout: (height: number) => void;
 }
 
-function CardItem({ card, itemWidth }: CardItemProps) {
+function CardItem({ card, itemWidth, itemHeight, cardWidth, onCardAreaLayout }: CardItemProps) {
   const [actionLoading, setActionLoading] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
@@ -88,13 +93,19 @@ function CardItem({ card, itemWidth }: CardItemProps) {
   };
 
   return (
-    <View style={[styles.cardItem, { width: itemWidth }]}>
-      <QuoteCard
-        card={card}
-        user={user}
-        cardRef={cardRef}
-        showWatermark={!isPremium}
-      />
+    <View style={[styles.cardItem, { width: itemWidth, height: itemHeight }]}>
+      <View
+        style={styles.cardArea}
+        onLayout={(e) => onCardAreaLayout(e.nativeEvent.layout.height)}
+      >
+        <QuoteCard
+          card={card}
+          user={user}
+          cardRef={cardRef}
+          showWatermark={!isPremium}
+          width={cardWidth}
+        />
+      </View>
       <ActionButtons
         onShare={handleShare}
         onDownload={handleDownload}
@@ -196,16 +207,12 @@ function CardItem({ card, itemWidth }: CardItemProps) {
   );
 }
 
-// ActionButtons renders: paddingTop(20) + button(44) + paddingBottom(16) = 80px
-const ACTION_BUTTONS_HEIGHT = 80;
-// Gap between cards in feedContent
-const FEED_GAP = 48;
-// Top padding of feedContent
-const FEED_PADDING_TOP = 12;
-
 export default function FeedScreen() {
   const { width } = useWindowDimensions();
   const itemWidth = width - 32;
+  const [listAreaHeight, setListAreaHeight] = useState(0);
+  const [cardAreaHeight, setCardAreaHeight] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
 
   const cards = useCardsStore((s) => s.cards);
@@ -226,10 +233,25 @@ export default function FeedScreen() {
   );
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
 
+  const onCardAreaLayout = useCallback((h: number) => {
+    setCardAreaHeight((prev) => (prev === h ? prev : h));
+  }, []);
 
-  const cardHeight = itemWidth * (3 / 2);
-  const slotHeight = cardHeight + ACTION_BUTTONS_HEIGHT + FEED_GAP;
-  const snapOffsets = cards.map((_, i) => i * slotHeight);
+  // Card naturally wants a 2:3 aspect ratio. Shrink it to fit the measured
+  // card area's height if needed; otherwise it fills the item width.
+  const cardWidth =
+    cardAreaHeight > 0 ? Math.min(itemWidth, cardAreaHeight * (2 / 3)) : itemWidth;
+
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const filteredCategories = trimmedQuery
+    ? CATEGORIES.filter((c) => c.label.toLowerCase().includes(trimmedQuery))
+    : [];
+
+  const handleSelectCategory = (id: string) => {
+    setCurrentCategory(id);
+    setSearchQuery('');
+    Keyboard.dismiss();
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
@@ -238,7 +260,27 @@ export default function FeedScreen() {
       <View style={styles.header}>
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>⌕</Text>
-          <Text style={styles.searchPlaceholder}>Search</Text>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search categories"
+            placeholderTextColor="#89726d"
+            returnKeyType="search"
+            onSubmitEditing={() => {
+              if (filteredCategories.length > 0) {
+                handleSelectCategory(filteredCategories[0].id);
+              }
+            }}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.searchClear}>✕</Text>
+            </TouchableOpacity>
+          )}
         </View>
         <TouchableOpacity
           style={styles.createBtn}
@@ -260,42 +302,70 @@ export default function FeedScreen() {
             </View>
           )}
         </TouchableOpacity>
+
+        {filteredCategories.length > 0 && (
+          <View style={styles.searchResults}>
+            <ScrollView keyboardShouldPersistTaps="handled">
+              {filteredCategories.map((c) => (
+                <TouchableOpacity
+                  key={c.id}
+                  style={styles.searchResultItem}
+                  onPress={() => handleSelectCategory(c.id)}
+                >
+                  <Text style={styles.searchResultText}>{c.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </View>
 
       {/* Category Chips */}
       <CategoryChips selected={currentCategory} onSelect={setCurrentCategory} />
 
       {/* Feed */}
-      {loading && cards.length === 0 ? (
-        <View style={styles.emptyState}>
-          <ActivityIndicator size="large" color="#9d3d2c" />
-        </View>
-      ) : cards.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No cards in this category yet.</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={cards}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <CardItem card={item} itemWidth={itemWidth} />}
-
-          contentContainerStyle={styles.feedContent}
-          showsVerticalScrollIndicator={false}
-          snapToOffsets={snapOffsets}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          onEndReached={() => { if (hasMore && !loading) fetchMore(); }}
-          onEndReachedThreshold={0.4}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          ListFooterComponent={
-            loading && cards.length > 0 ? (
-              <ActivityIndicator color="#9d3d2c" style={styles.footerLoader} />
-            ) : null
-          }
-        />
-      )}
+      <View
+        style={styles.feedArea}
+        onLayout={(e) => setListAreaHeight(e.nativeEvent.layout.height)}
+      >
+        {loading && cards.length === 0 ? (
+          <View style={styles.emptyState}>
+            <ActivityIndicator size="large" color="#9d3d2c" />
+          </View>
+        ) : cards.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No cards in this category yet.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={cards}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <CardItem
+                card={item}
+                itemWidth={itemWidth}
+                itemHeight={listAreaHeight}
+                cardWidth={cardWidth}
+                onCardAreaLayout={onCardAreaLayout}
+              />
+            )}
+            contentContainerStyle={styles.feedContent}
+            showsVerticalScrollIndicator={false}
+            snapToInterval={listAreaHeight || undefined}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            onEndReached={() => { if (hasMore && !loading) fetchMore(); }}
+            onEndReachedThreshold={0.4}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            ListFooterComponent={
+              loading && cards.length > 0 ? (
+                <ActivityIndicator color="#9d3d2c" style={styles.footerLoader} />
+              ) : null
+            }
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -314,6 +384,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ebe8e3',
     backgroundColor: '#ffffff',
     gap: 10,
+    position: 'relative',
+    zIndex: 10,
   },
   searchBar: {
     flex: 1,
@@ -331,9 +403,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#89726d',
   },
-  searchPlaceholder: {
+  searchInput: {
+    flex: 1,
     fontSize: 14,
+    color: '#1c1c19',
+    padding: 0,
+  },
+  searchClear: {
+    fontSize: 13,
     color: '#89726d',
+  },
+  searchResults: {
+    position: 'absolute',
+    top: '100%',
+    left: 16,
+    right: 16,
+    maxHeight: 240,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ebe8e3',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 20,
+  },
+  searchResultItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f6f3ee',
+  },
+  searchResultText: {
+    fontSize: 14,
+    color: '#1c1c19',
   },
   createBtn: {
     borderWidth: 1,
@@ -371,15 +476,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#9d3d2c',
   },
+  feedArea: {
+    flex: 1,
+  },
   feedContent: {
     paddingHorizontal: 16,
-    paddingTop: FEED_PADDING_TOP,
-    paddingBottom: ACTION_BUTTONS_HEIGHT + 4,
-    gap: 48,
     backgroundColor: '#fcf9f4',
   },
   cardItem: {
-    // width set dynamically
+    // width and height set dynamically
+    paddingTop: 12,
+  },
+  cardArea: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyState: {
     flex: 1,
