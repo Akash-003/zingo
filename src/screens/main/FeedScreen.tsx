@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   FlatList,
@@ -23,6 +23,7 @@ import QuoteCard from '../../components/cards/QuoteCard';
 import ActionButtons from '../../components/ActionButtons';
 import CategoryChips, { CATEGORIES } from '../../components/CategoryChips';
 import PhotoUploader from '../../components/PhotoUploader';
+import PaywallModal from '../../components/PaywallModal';
 import { useCards } from '../../hooks/useCards';
 import { useCardCapture } from '../../hooks/useCardCapture';
 import { useUserProfile } from '../../hooks/useUserProfile';
@@ -35,39 +36,103 @@ interface CardItemProps {
   card: Card;
   itemWidth: number;
   itemHeight: number;
-  cardWidth: number;
-  onCardAreaLayout: (height: number) => void;
 }
 
-function CardItem({ card, itemWidth, itemHeight, cardWidth, onCardAreaLayout }: CardItemProps) {
-  const [actionLoading, setActionLoading] = useState(false);
+type CardActionEvent = 'share_card' | 'download_card';
+
+function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
+  const [loadingAction, setLoadingAction] = useState<'share' | 'download' | null>(null);
   const [nameModalVisible, setNameModalVisible] = useState(false);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
+  const [paywallVisible, setPaywallVisible] = useState(false);
+  const [paywallContext, setPaywallContext] = useState<'share' | 'save'>('share');
+  const [pendingPlainEvent, setPendingPlainEvent] = useState<CardActionEvent | null>(null);
   const cardRef = useRef<View>(null);
   const { capture } = useCardCapture();
-  const { updateName, addPhoto, setPrimaryPhoto, loading: profileLoading } = useUserProfile();
+  const {
+    updateName,
+    addPhoto,
+    setPrimaryPhoto,
+    refreshProfile,
+    loading: profileLoading,
+  } = useUserProfile();
   const uid = useUserStore((s) => s.uid);
   const isPremium = useUserStore((s) => s.isPremium);
   const primaryPhotoUrl = useUserStore((s) => s.primaryPhotoUrl);
   const name = useUserStore((s) => s.name);
   const user = { primaryPhotoUrl, name };
 
-  const captureAndRun = async (action: (uri: string) => Promise<void>, event: 'share_card' | 'download_card') => {
+  const eventForContext = (ctx: 'share' | 'save'): CardActionEvent =>
+    ctx === 'share' ? 'share_card' : 'download_card';
+
+  // Capture the given card View and run the matching share/save action.
+  const runAction = async (ref: typeof cardRef, event: CardActionEvent) => {
+    const action = event === 'share_card' ? shareCard : downloadCard;
     try {
-      setActionLoading(true);
-      const uri = await capture(cardRef);
+      setLoadingAction(event === 'share_card' ? 'share' : 'download');
+      const uri = await capture(ref);
       await action(uri);
       void track(uid, event, { card_id: card.id, category: card.category });
     } catch {
       Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
-      setActionLoading(false);
+      setLoadingAction(null);
     }
   };
 
-  const handleShare = () => captureAndRun(shareCard, 'share_card');
-  const handleDownload = () => captureAndRun(downloadCard, 'download_card');
+  // Free users go through the paywall; premium users act directly.
+  const handleShare = async () => {
+    if (isPremium) {
+      await runAction(cardRef, 'share_card');
+      return;
+    }
+    setPaywallContext('share');
+    setPaywallVisible(true);
+  };
+  const handleDownload = async () => {
+    if (isPremium) {
+      await runAction(cardRef, 'download_card');
+      return;
+    }
+    setPaywallContext('save');
+    setPaywallVisible(true);
+  };
+
+  // Free path: while pendingPlainEvent is set, the visible card renders
+  // non-personalized (no name/photo). Wait for that render to paint, then
+  // capture the on-screen card and run the action, then revert.
+  useEffect(() => {
+    if (!pendingPlainEvent) return;
+    let cancelled = false;
+    const run = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      if (cancelled) return;
+      await runAction(cardRef, pendingPlainEvent);
+      if (!cancelled) setPendingPlainEvent(null);
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPlainEvent]);
+
+  const handleShareWithoutPersonalization = () => {
+    setPaywallVisible(false);
+    setPendingPlainEvent(eventForContext(paywallContext));
+  };
+
+  const handleSubscribed = (planId: string) => {
+    setPaywallVisible(false);
+    void (async () => {
+      await refreshProfile();
+      void track(uid, 'purchase_completed', { plan_id: planId, card_id: card.id });
+      // Let the watermark removal (isPremium → true) paint before capture.
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await runAction(cardRef, eventForContext(paywallContext));
+    })();
+  };
 
   const handleChangePhoto = () => {
     void track(uid, 'change_photo', { card_id: card.id });
@@ -94,16 +159,12 @@ function CardItem({ card, itemWidth, itemHeight, cardWidth, onCardAreaLayout }: 
 
   return (
     <View style={[styles.cardItem, { width: itemWidth, height: itemHeight }]}>
-      <View
-        style={styles.cardArea}
-        onLayout={(e) => onCardAreaLayout(e.nativeEvent.layout.height)}
-      >
+      <View style={styles.cardArea}>
         <QuoteCard
           card={card}
-          user={user}
+          user={pendingPlainEvent !== null ? { primaryPhotoUrl: null, name: '' } : user}
           cardRef={cardRef}
-          showWatermark={!isPremium}
-          width={cardWidth}
+          showWatermark={!isPremium || pendingPlainEvent !== null}
         />
       </View>
       <ActionButtons
@@ -111,7 +172,8 @@ function CardItem({ card, itemWidth, itemHeight, cardWidth, onCardAreaLayout }: 
         onDownload={handleDownload}
         onChangePhoto={handleChangePhoto}
         onEditName={handleEditName}
-        loading={actionLoading}
+        loadingAction={loadingAction}
+        showPersonalization={card.supportsPersonalization}
       />
 
       {/* Edit Name modal */}
@@ -203,6 +265,20 @@ function CardItem({ card, itemWidth, itemHeight, cardWidth, onCardAreaLayout }: 
           </View>
         </View>
       </Modal>
+
+      {/* Paywall */}
+      <PaywallModal
+        visible={paywallVisible}
+        context={paywallContext}
+        uid={uid}
+        cardId={card.id}
+        category={card.category}
+        personalizable={card.supportsPersonalization}
+        prefillName={name}
+        onClose={() => setPaywallVisible(false)}
+        onShareWithoutPersonalization={handleShareWithoutPersonalization}
+        onSubscribed={handleSubscribed}
+      />
     </View>
   );
 }
@@ -211,7 +287,6 @@ export default function FeedScreen() {
   const { width } = useWindowDimensions();
   const itemWidth = width - 32;
   const [listAreaHeight, setListAreaHeight] = useState(0);
-  const [cardAreaHeight, setCardAreaHeight] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
 
@@ -232,15 +307,6 @@ export default function FeedScreen() {
     [uid]
   );
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
-
-  const onCardAreaLayout = useCallback((h: number) => {
-    setCardAreaHeight((prev) => (prev === h ? prev : h));
-  }, []);
-
-  // Card naturally wants a 2:3 aspect ratio. Shrink it to fit the measured
-  // card area's height if needed; otherwise it fills the item width.
-  const cardWidth =
-    cardAreaHeight > 0 ? Math.min(itemWidth, cardAreaHeight * (2 / 3)) : itemWidth;
 
   const trimmedQuery = searchQuery.trim().toLowerCase();
   const filteredCategories = trimmedQuery
@@ -345,8 +411,6 @@ export default function FeedScreen() {
                 card={item}
                 itemWidth={itemWidth}
                 itemHeight={listAreaHeight}
-                cardWidth={cardWidth}
-                onCardAreaLayout={onCardAreaLayout}
               />
             )}
             contentContainerStyle={styles.feedContent}

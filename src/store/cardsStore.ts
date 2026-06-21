@@ -25,8 +25,9 @@ export interface Card {
   category: string;
   isPremium: boolean;
   createdAt: number;
-  photoSlot: PhotoSlot;
-  nameSlot: NameSlot;
+  supportsPersonalization: boolean;
+  photoSlot: PhotoSlot | null;
+  nameSlot: NameSlot | null;
 }
 
 interface CardsState {

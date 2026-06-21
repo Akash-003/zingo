@@ -19,8 +19,9 @@ export function useCards() {
     category: row.category as string,
     isPremium: row.is_premium as boolean,
     createdAt: new Date(row.created_at as string).getTime(),
-    photoSlot: row.photo_slot as Card['photoSlot'],
-    nameSlot: row.name_slot as Card['nameSlot'],
+    supportsPersonalization: (row.supports_personalization as boolean) ?? true,
+    photoSlot: (row.photo_slot as Card['photoSlot']) ?? null,
+    nameSlot: (row.name_slot as Card['nameSlot']) ?? null,
   });
 
   const fetchPage = async (reset: boolean) => {

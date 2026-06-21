@@ -6,7 +6,8 @@ interface ActionButtonsProps {
   onDownload: () => Promise<void>;
   onChangePhoto: () => void;
   onEditName: () => void;
-  loading?: boolean;
+  loadingAction?: 'share' | 'download' | null;
+  showPersonalization?: boolean;
 }
 
 export default function ActionButtons({
@@ -14,8 +15,10 @@ export default function ActionButtons({
   onDownload,
   onChangePhoto,
   onEditName,
-  loading = false,
+  loadingAction = null,
+  showPersonalization = true,
 }: ActionButtonsProps) {
+  const busy = loadingAction !== null;
   return (
     <View style={styles.container}>
       {/* Primary CTAs */}
@@ -23,9 +26,9 @@ export default function ActionButtons({
         style={[styles.primaryBtn, styles.shareBtn]}
         onPress={onShare}
         activeOpacity={0.8}
-        disabled={loading}
+        disabled={busy}
       >
-        {loading ? (
+        {loadingAction === 'share' ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
           <Ionicons name="share-social-outline" size={18} color="#fff" />
@@ -37,30 +40,38 @@ export default function ActionButtons({
         style={[styles.primaryBtn, styles.saveBtn]}
         onPress={onDownload}
         activeOpacity={0.8}
-        disabled={loading}
+        disabled={busy}
       >
-        <Ionicons name="download-outline" size={18} color="#9d3d2c" />
+        {loadingAction === 'download' ? (
+          <ActivityIndicator size="small" color="#9d3d2c" />
+        ) : (
+          <Ionicons name="download-outline" size={18} color="#9d3d2c" />
+        )}
         <Text style={styles.saveLabel}>Save</Text>
       </TouchableOpacity>
 
-      {/* Secondary actions */}
-      <TouchableOpacity
-        style={styles.secondaryBtn}
-        onPress={onChangePhoto}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="camera-outline" size={16} color="#56423e" />
-        <Text style={styles.secondaryLabel}>Photo</Text>
-      </TouchableOpacity>
+      {/* Secondary actions — only for personalizable cards */}
+      {showPersonalization && (
+        <>
+          <TouchableOpacity
+            style={styles.secondaryBtn}
+            onPress={onChangePhoto}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="camera-outline" size={16} color="#56423e" />
+            <Text style={styles.secondaryLabel}>Photo</Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.secondaryBtn}
-        onPress={onEditName}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="pencil-outline" size={16} color="#56423e" />
-        <Text style={styles.secondaryLabel}>Name</Text>
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryBtn}
+            onPress={onEditName}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="pencil-outline" size={16} color="#56423e" />
+            <Text style={styles.secondaryLabel}>Name</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 }

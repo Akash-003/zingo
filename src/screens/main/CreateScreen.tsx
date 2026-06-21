@@ -51,6 +51,7 @@ export default function CreateScreen() {
   const [nameBold, setNameBold] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(false);
+  const [personalizable, setPersonalizable] = useState(true);
   const [publishing, setPublishing] = useState(false);
 
   const uid = useUserStore((s) => s.uid);
@@ -146,26 +147,32 @@ export default function CreateScreen() {
 
       const { data: urlData } = supabase.storage.from('user-photos').getPublicUrl(path);
 
-      const photoSlot = {
-        style: 'circle',
-        top: Math.round(normalise(photoPos.y)),
-        left: Math.round(normalise(photoPos.x)),
-        width: Math.round(normalise(circleSize)),
-        height: Math.round(normalise(circleSize)),
-        borderRadius: 9999,
-      };
-      const nameSlot = {
-        top: Math.round(normalise(namePos.y)),
-        left: Math.round(normalise(namePos.x)),
-        fontSize: nameFontSize,
-        color: nameColor,
-        fontWeight: nameBold ? 'bold' : 'normal',
-      };
+      // Non-personalizable cards carry no photo/name slots.
+      const photoSlot = personalizable
+        ? {
+            style: 'circle',
+            top: Math.round(normalise(photoPos.y)),
+            left: Math.round(normalise(photoPos.x)),
+            width: Math.round(normalise(circleSize)),
+            height: Math.round(normalise(circleSize)),
+            borderRadius: 9999,
+          }
+        : null;
+      const nameSlot = personalizable
+        ? {
+            top: Math.round(normalise(namePos.y)),
+            left: Math.round(normalise(namePos.x)),
+            fontSize: nameFontSize,
+            color: nameColor,
+            fontWeight: nameBold ? 'bold' : 'normal',
+          }
+        : null;
 
       const { error: insertError } = await supabase.from('cards').insert({
         image_url: urlData.publicUrl,
         category,
         is_premium: false,
+        supports_personalization: personalizable,
         photo_slot: photoSlot,
         name_slot: nameSlot,
         created_by: uid,
@@ -179,6 +186,7 @@ export default function CreateScreen() {
       setImageUri(null);
       setCategory(null);
       setIsPublic(false);
+      setPersonalizable(true);
       resetHandles();
       Alert.alert('Card Published!', msg);
     } catch {
@@ -207,32 +215,35 @@ export default function CreateScreen() {
           <View style={styles.canvas}>
             <Image source={{ uri: imageUri }} style={styles.canvasImage} />
 
-            {/* Photo handle */}
-            <View
-              {...photoResponder.panHandlers}
-              style={[
-                styles.photoHandle,
-                {
-                  left: photoPos.x,
-                  top: photoPos.y,
-                  width: circleSize,
-                  height: circleSize,
-                  borderRadius: circleSize / 2,
-                },
-              ]}
-            >
-              <Ionicons name="person" size={circleSize * 0.45} color="#fff" />
-            </View>
+            {/* Photo & name handles — only when the card is personalizable */}
+            {personalizable && (
+              <>
+                <View
+                  {...photoResponder.panHandlers}
+                  style={[
+                    styles.photoHandle,
+                    {
+                      left: photoPos.x,
+                      top: photoPos.y,
+                      width: circleSize,
+                      height: circleSize,
+                      borderRadius: circleSize / 2,
+                    },
+                  ]}
+                >
+                  <Ionicons name="person" size={circleSize * 0.45} color="#fff" />
+                </View>
 
-            {/* Name handle */}
-            <View
-              {...nameResponder.panHandlers}
-              style={[styles.nameHandle, { left: namePos.x, top: namePos.y }]}
-            >
-              <Text style={{ color: nameColor, fontSize: nameFontSize, fontWeight: nameBold ? 'bold' : 'normal' }}>
-                {name || 'Your Name'}
-              </Text>
-            </View>
+                <View
+                  {...nameResponder.panHandlers}
+                  style={[styles.nameHandle, { left: namePos.x, top: namePos.y }]}
+                >
+                  <Text style={{ color: nameColor, fontSize: nameFontSize, fontWeight: nameBold ? 'bold' : 'normal' }}>
+                    {name || 'Your Name'}
+                  </Text>
+                </View>
+              </>
+            )}
 
             {/* Change image overlay */}
             <TouchableOpacity style={styles.changeBtn} onPress={pickImage}>
@@ -267,6 +278,9 @@ export default function CreateScreen() {
         {/* Controls — shown only when image is picked */}
         {imageUri && (
           <>
+            {/* Photo & name controls — only when the card is personalizable */}
+            {personalizable && (
+            <>
             {/* Photo size */}
             <View style={styles.controlSection}>
               <Text style={styles.controlLabel}>Photo size: {Math.round(circleSize)}px</Text>
@@ -327,10 +341,28 @@ export default function CreateScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+            </>
+            )}
 
             {/* Publish settings */}
             <View style={styles.controlSection}>
               <Text style={styles.sectionTitle}>Publish Settings</Text>
+
+              <Text style={styles.controlLabel}>Personalization</Text>
+              <View style={styles.visibilityRow}>
+                <TouchableOpacity
+                  style={[styles.visBtn, personalizable && styles.visBtnActive]}
+                  onPress={() => setPersonalizable(true)}
+                >
+                  <Text style={[styles.visBtnText, personalizable && styles.visBtnTextActive]}>Photo & Name</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.visBtn, !personalizable && styles.visBtnActive]}
+                  onPress={() => setPersonalizable(false)}
+                >
+                  <Text style={[styles.visBtnText, !personalizable && styles.visBtnTextActive]}>Plain Card</Text>
+                </TouchableOpacity>
+              </View>
 
               <Text style={styles.controlLabel}>Category (optional)</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>

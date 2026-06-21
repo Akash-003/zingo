@@ -35,7 +35,7 @@ Reference app for inspiration: **Crafto** (https://crafto.app)
 | Background Removal | Remove.bg API                     | Strips photo background before placing on card         |
 | Sharing            | expo-sharing + expo-media-library | Share/save composited image                            |
 | Photo Picker       | expo-image-picker                 | Camera + Gallery access                                |
-| Payments           | RevenueCat                        | Not yet implemented — Phase 5 last step                |
+| Payments           | Razorpay Subscriptions            | Native SDK + Supabase Edge Functions (secret server-side) |
 | Push Notifications | expo-notifications                | Token stored in profiles.push_token                    |
 | Analytics          | Supabase (analytics_events table) | track() helper in src/services/analytics.ts            |
 
@@ -223,8 +223,12 @@ cards
   is_premium boolean
   is_public boolean           ← user-created cards can be public (community) or private
   created_by uuid nullable    ← NULL for seed cards, uid for user-created cards
-  photo_slot jsonb            ← PhotoSlot (see above)
-  name_slot jsonb             ← NameSlot (see above)
+  supports_personalization boolean default true
+                              ← false = design has no room for a user photo/name;
+                                rendered as a plain card (no overlay, no Photo/Name
+                                buttons). Watermark/paywall still apply.
+  photo_slot jsonb nullable   ← PhotoSlot (see above); NULL when not personalizable
+  name_slot jsonb nullable    ← NameSlot (see above); NULL when not personalizable
   created_at timestamptz
 
 analytics_events
@@ -332,7 +336,23 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
 - ✅ Analytics — `analytics_events` table + `track()` wired into all key actions
 - ✅ Push notifications — `expo-notifications`, token stored in `profiles.push_token`
 - ✅ EAS Build config — `eas.json` with development / preview / production profiles
-- ⬜ RevenueCat paywall — implement last; needs `src/services/revenuecat.ts` + `PaywallScreen.tsx`
+- ✅ Custom paywall + Razorpay Subscriptions (replaces RevenueCat). Triggered
+  in `FeedScreen` `CardItem` when a free user taps Share/Save: choose "share
+  without personalization" (plain card, watermark kept) or subscribe.
+  - Plans are configurable via the `subscription_plans` table (mirrors the
+    plans you create in the Razorpay dashboard) — see migration
+    `20250615000001_subscriptions.sql`.
+  - Client: `src/services/payments.ts` + `src/components/PaywallModal.tsx`.
+  - Server (secret-holding): Supabase Edge Functions `create-subscription`,
+    `verify-payment`, `razorpay-webhook`. Set secrets with
+    `supabase secrets set RAZORPAY_KEY_ID=... RAZORPAY_KEY_SECRET=... RAZORPAY_WEBHOOK_SECRET=...`.
+    Deploy the webhook with `--no-verify-jwt`.
+  - `is_premium`/`premium_expiry` are flipped **server-side only**; the app
+    bundle carries only the public `RAZORPAY_KEY_ID`.
+  - ⚠️ `react-native-razorpay` is a native module → **needs an EAS dev build**
+    (no Expo Go) and does **not** officially support the New Architecture
+    (`newArchEnabled: true` in `app.config.js`). Verify checkout in a dev
+    build; if it fails under new arch, set `newArchEnabled: false`.
 - ⬜ App icon / splash assets — `app.config.js` is wired; need design assets at `assets/`
 - ⬜ `EAS_PROJECT_ID` — run `eas init` to generate, then add to `.env`
 

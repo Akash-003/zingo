@@ -89,10 +89,25 @@ export function useUserProfile() {
     }
   };
 
+  // Re-pull the current user's profile (e.g. after a successful purchase so
+  // isPremium flips without needing an app restart).
+  const refreshProfile = async () => {
+    if (!uid) return;
+    await fetchProfile(uid);
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     reset();
   };
 
-  return { loading, fetchProfile, updateName, addPhoto, setPrimaryPhoto, signOut };
+  return {
+    loading,
+    fetchProfile,
+    refreshProfile,
+    updateName,
+    addPhoto,
+    setPrimaryPhoto,
+    signOut,
+  };
 }

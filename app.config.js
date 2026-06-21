@@ -46,6 +46,9 @@ export default {
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
       REMOVE_BG_API_KEY: process.env.REMOVE_BG_API_KEY,
+      // Public Razorpay key id only. The key SECRET and webhook secret live
+      // in Supabase Edge Function secrets — never in the app bundle.
+      RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
       eas: {
         projectId: process.env.EAS_PROJECT_ID,
       },
