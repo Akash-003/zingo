@@ -61,6 +61,32 @@ export async function fetchRazorpaySubscription(
   return (await res.json()) as RazorpaySubscription;
 }
 
+// Cancels a subscription. By default cancels at the end of the current
+// billing cycle (cancel_at_cycle_end=1) so the user keeps access until the
+// period they already paid for ends; Razorpay then emits
+// `subscription.cancelled`, which the webhook maps to is_premium=false.
+export async function cancelRazorpaySubscription(
+  subscriptionId: string,
+  cancelAtCycleEnd = true,
+): Promise<RazorpaySubscription> {
+  const res = await fetch(
+    `${RAZORPAY_API}/subscriptions/${subscriptionId}/cancel`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: basicAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cancel_at_cycle_end: cancelAtCycleEnd ? 1 : 0 }),
+    },
+  );
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Razorpay cancel subscription failed: ${detail}`);
+  }
+  return (await res.json()) as RazorpaySubscription;
+}
+
 // HMAC-SHA256 hex digest of `message` keyed by `secret`.
 export async function hmacSha256Hex(
   message: string,

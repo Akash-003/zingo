@@ -5,13 +5,13 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
   StyleSheet,
   SafeAreaView,
   StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../hooks/useAuth';
+import { showAlert } from '../../store/alertStore';
 
 export default function WelcomeScreen() {
   const { signInWithGoogle, signInAsGuest } = useAuth();
@@ -23,7 +23,7 @@ export default function WelcomeScreen() {
       setLoadingGoogle(true);
       await signInWithGoogle();
     } catch {
-      Alert.alert('Sign in failed', 'Could not sign in with Google. Please try again.');
+      showAlert('Sign in failed', 'Could not sign in with Google. Please try again.');
     } finally {
       setLoadingGoogle(false);
     }
@@ -34,7 +34,7 @@ export default function WelcomeScreen() {
       setLoadingGuest(true);
       await signInAsGuest();
     } catch {
-      Alert.alert('Sign in failed', 'Could not continue as guest. Please try again.');
+      showAlert('Sign in failed', 'Could not continue as guest. Please try again.');
     } finally {
       setLoadingGuest(false);
     }

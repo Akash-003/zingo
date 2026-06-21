@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   StyleSheet,
   ScrollView,
@@ -16,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import PhotoUploader from '../../components/PhotoUploader';
 import { supabase } from '../../services/supabase';
 import { useUserStore } from '../../store/userStore';
+import { showAlert } from '../../store/alertStore';
 
 export default function ProfileSetupScreen() {
   const uid = useUserStore((s) => s.uid);
@@ -51,7 +51,7 @@ export default function ProfileSetupScreen() {
       // If skipping, set a placeholder so RootNavigator navigates to MainStack
       if (skipName) setName('Guest');
     } catch {
-      Alert.alert('Error', 'Could not save your profile. Please try again.');
+      showAlert('Error', 'Could not save your profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -59,7 +59,7 @@ export default function ProfileSetupScreen() {
 
   const handleStartExploring = () => {
     if (!nameInput.trim()) {
-      Alert.alert('Name required', 'Please enter your name to continue.');
+      showAlert('Name required', 'Please enter your name to continue.');
       return;
     }
     saveProfile(nameInput);

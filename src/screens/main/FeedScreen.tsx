@@ -7,7 +7,6 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Modal,
   KeyboardAvoidingView,
   Keyboard,
@@ -31,6 +30,7 @@ import { shareCard, downloadCard } from '../../services/sharing';
 import { track } from '../../services/analytics';
 import { useCardsStore, Card } from '../../store/cardsStore';
 import { useUserStore } from '../../store/userStore';
+import { showAlert } from '../../store/alertStore';
 
 interface CardItemProps {
   card: Card;
@@ -75,7 +75,7 @@ function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
       await action(uri);
       void track(uid, event, { card_id: card.id, category: card.category });
     } catch {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      showAlert('Error', 'Something went wrong. Please try again.');
     } finally {
       setLoadingAction(null);
     }

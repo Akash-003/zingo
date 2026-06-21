@@ -38,6 +38,73 @@ const { RAZORPAY_KEY_ID } = (Constants.expoConfig?.extra ?? {}) as Record<
   string
 >;
 
+export interface UserSubscription {
+  status: string;
+  razorpaySubscriptionId: string;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  planLabel: string | null;
+  planAmountDisplay: string | null;
+  planPeriod: string | null;
+}
+
+interface SubscriptionRow {
+  status: string;
+  razorpay_subscription_id: string;
+  razorpay_plan_id: string;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+}
+
+/**
+ * Loads the current user's most recent subscription (RLS scopes the query to
+ * the owner) and joins in the plan's display fields. Returns null if the user
+ * has never subscribed.
+ */
+export async function fetchUserSubscription(): Promise<UserSubscription | null> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select(
+      'status, razorpay_subscription_id, razorpay_plan_id, current_period_end, cancel_at_period_end',
+    )
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  const row = data as SubscriptionRow | null;
+  if (!row) return null;
+
+  const { data: planData } = await supabase
+    .from('subscription_plans')
+    .select('label, period, amount_display')
+    .eq('razorpay_plan_id', row.razorpay_plan_id)
+    .maybeSingle();
+  const plan = planData as PlanRow | null;
+
+  return {
+    status: row.status,
+    razorpaySubscriptionId: row.razorpay_subscription_id,
+    currentPeriodEnd: row.current_period_end,
+    cancelAtPeriodEnd: row.cancel_at_period_end,
+    planLabel: plan?.label ?? null,
+    planAmountDisplay: plan?.amount_display ?? null,
+    planPeriod: plan?.period ?? null,
+  };
+}
+
+/**
+ * Cancels the user's subscription at the end of the current billing period via
+ * the cancel-subscription Edge Function (which holds the Razorpay secret).
+ */
+export async function cancelSubscription(
+  razorpaySubscriptionId: string,
+): Promise<void> {
+  const { error } = await supabase.functions.invoke('cancel-subscription', {
+    body: { razorpay_subscription_id: razorpaySubscriptionId },
+  });
+  if (error) throw new Error(error.message ?? 'Could not cancel subscription');
+}
+
 /** Loads the active subscription plans you configured on Razorpay. */
 export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase

@@ -5,11 +5,11 @@ import {
   Modal,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   StyleSheet,
 } from 'react-native';
 import { fetchPlans, startSubscription, Plan } from '../services/payments';
 import { track } from '../services/analytics';
+import { showAlert } from '../store/alertStore';
 
 interface PaywallModalProps {
   visible: boolean;
@@ -72,7 +72,7 @@ export default function PaywallModal({
         onSubscribed(plan.razorpayPlanId);
       }
     } catch {
-      Alert.alert('Payment failed', 'Something went wrong. Please try again.');
+      showAlert('Payment failed', 'Something went wrong. Please try again.');
     } finally {
       setPurchasingPlanId(null);
     }

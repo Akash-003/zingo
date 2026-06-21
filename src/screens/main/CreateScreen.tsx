@@ -7,7 +7,6 @@ import {
   Image,
   PanResponder,
   Dimensions,
-  Alert,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
@@ -20,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
 import { track } from '../../services/analytics';
 import { useUserStore } from '../../store/userStore';
+import { showAlert } from '../../store/alertStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PREVIEW_WIDTH = SCREEN_WIDTH - 32;
@@ -71,7 +71,7 @@ export default function CreateScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Please allow photo access.');
+      showAlert('Permission required', 'Please allow photo access.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -188,9 +188,9 @@ export default function CreateScreen() {
       setIsPublic(false);
       setPersonalizable(true);
       resetHandles();
-      Alert.alert('Card Published!', msg);
+      showAlert('Card Published!', msg);
     } catch {
-      Alert.alert('Publish failed', 'Could not publish your card. Please try again.');
+      showAlert('Publish failed', 'Could not publish your card. Please try again.');
     } finally {
       setPublishing(false);
     }

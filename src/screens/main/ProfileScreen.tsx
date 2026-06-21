@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
   Linking,
   Modal,
   ActivityIndicator,
@@ -13,9 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 
 import { useUserStore } from '../../store/userStore';
 import { useUserProfile } from '../../hooks/useUserProfile';
+import { showAlert } from '../../store/alertStore';
 import PhotoUploader from '../../components/PhotoUploader';
 
 const STATS = [
@@ -33,6 +35,7 @@ const SETTINGS = [
 
 export default function ProfileScreen() {
   const [editPhotoModal, setEditPhotoModal] = useState(false);
+  const navigation = useNavigation();
 
   const name = useUserStore((s) => s.name);
   const primaryPhotoUrl = useUserStore((s) => s.primaryPhotoUrl);
@@ -57,7 +60,7 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+    showAlert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: signOut },
     ]);
@@ -97,6 +100,32 @@ export default function ProfileScreen() {
             </View>
           )}
         </View>
+
+        {/* Premium subscription card — only for premium members */}
+        {isPremium && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('Subscription' as never)}
+          >
+            <LinearGradient
+              colors={['#9d3d2c', '#bd5541']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.premiumCard}
+            >
+              <View style={styles.premiumCardIcon}>
+                <Ionicons name="star" size={22} color="#fff" />
+              </View>
+              <View style={styles.premiumCardText}>
+                <Text style={styles.premiumCardTitle}>QuoteFlow Premium</Text>
+                <Text style={styles.premiumCardSubtitle}>
+                  Manage your subscription
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.85)" />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
 
         {/* Stats */}
         <View style={styles.statsRow}>
@@ -160,7 +189,7 @@ export default function ProfileScreen() {
                 if (row.label === 'Notifications & Updates') {
                   void Linking.openSettings();
                 } else {
-                  Alert.alert(row.label, 'This feature is coming soon.');
+                  showAlert(row.label, 'This feature is coming soon.');
                 }
               }}
               activeOpacity={0.7}
@@ -248,6 +277,33 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   premiumText: { fontSize: 11, fontWeight: '700', color: '#3a4a2a', letterSpacing: 1 },
+
+  // Premium subscription card
+  premiumCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 20,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    gap: 14,
+  },
+  premiumCardIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  premiumCardText: { flex: 1 },
+  premiumCardTitle: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  premiumCardSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 2,
+  },
 
   // Stats
   statsRow: {

@@ -3,7 +3,6 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
   StyleSheet,
   View,
   Text,
@@ -12,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../services/supabase';
 import { removeBackground } from '../services/backgroundRemoval';
 import { useUserStore } from '../store/userStore';
+import { showAlert } from '../store/alertStore';
 
 interface PhotoUploaderProps {
   onPhotoUploaded: (url: string) => void;
@@ -25,7 +25,7 @@ export default function PhotoUploader({ onPhotoUploaded, currentPhotoUrl }: Phot
   const handlePress = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Please allow photo access to upload your picture.');
+      showAlert('Permission required', 'Please allow photo access to upload your picture.');
       return;
     }
 
@@ -45,7 +45,7 @@ export default function PhotoUploader({ onPhotoUploaded, currentPhotoUrl }: Phot
       const publicUrl = await uploadToStorage(processedUri);
       onPhotoUploaded(publicUrl);
     } catch (err) {
-      Alert.alert('Upload failed', 'Could not upload your photo. Please try again.');
+      showAlert('Upload failed', 'Could not upload your photo. Please try again.');
     } finally {
       setUploading(false);
     }

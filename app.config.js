@@ -16,14 +16,14 @@ export default {
     },
     ios: {
       supportsTablet: false,
-      bundleIdentifier: 'com.yourcompany.quoteflow',
+      bundleIdentifier: 'com.footprint.quoteflow',
     },
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#fcf9f4',
       },
-      package: 'com.yourcompany.quoteflow',
+      package: 'com.footprint.quoteflow',
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
     },

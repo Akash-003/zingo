@@ -8,6 +8,7 @@ export type AnalyticsEvent =
   | 'edit_name'
   | 'paywall_shown'
   | 'purchase_completed'
+  | 'subscription_cancelled'
   | 'card_published'
   | 'category_selected'
   | 'photo_uploaded';
