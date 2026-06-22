@@ -145,7 +145,7 @@ export async function startSubscription(
     checkout = (await RazorpayCheckout.open({
       key: data.key_id ?? RAZORPAY_KEY_ID,
       subscription_id: data.subscription_id,
-      name: 'QuoteFlow Premium',
+      name: 'Zingo Premium',
       description: 'Unlimited personalized sharing & downloads',
       prefill,
       theme: { color: '#9d3d2c' },

@@ -46,7 +46,7 @@ export default function WelcomeScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.brandName}>QuoteFlow</Text>
+        <Text style={styles.brandName}>Zingo</Text>
       </View>
 
       {/* Hero */}

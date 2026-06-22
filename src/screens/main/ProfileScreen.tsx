@@ -30,7 +30,6 @@ const STATS = [
 const SETTINGS = [
   { icon: 'notifications-outline' as const, label: 'Notifications & Updates' },
   { icon: 'lock-closed-outline' as const, label: 'Privacy & Security' },
-  { icon: 'color-palette-outline' as const, label: 'Appearance & Theme' },
 ];
 
 export default function ProfileScreen() {
@@ -117,7 +116,7 @@ export default function ProfileScreen() {
                 <Ionicons name="star" size={22} color="#fff" />
               </View>
               <View style={styles.premiumCardText}>
-                <Text style={styles.premiumCardTitle}>QuoteFlow Premium</Text>
+                <Text style={styles.premiumCardTitle}>Zingo Premium</Text>
                 <Text style={styles.premiumCardSubtitle}>
                   Manage your subscription
                 </Text>

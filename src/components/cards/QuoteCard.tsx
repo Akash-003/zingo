@@ -127,7 +127,7 @@ export default function QuoteCard({ card, user, cardRef, showWatermark }: QuoteC
         {/* Watermark for free users */}
         {showWatermark && (
           <View style={styles.watermark} pointerEvents="none">
-            <Text style={styles.watermarkText}>Made with QuoteFlow</Text>
+            <Text style={styles.watermarkText}>Made with Zingo</Text>
           </View>
         )}
       </View>

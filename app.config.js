@@ -2,18 +2,13 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: 'QuoteFlow',
+    name: 'Zingo',
     slug: 'quoteflow',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     newArchEnabled: true,
-    splash: {
-      image: './assets/splash-icon.png',
-      resizeMode: 'contain',
-      backgroundColor: '#fcf9f4',
-    },
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.footprint.quoteflow',
@@ -21,7 +16,8 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#fcf9f4',
+        backgroundImage: './assets/adaptive-background.png',
+        backgroundColor: '#F97316',
       },
       package: 'com.footprint.quoteflow',
       edgeToEdgeEnabled: true,
@@ -34,10 +30,23 @@ export default {
     plugins: [
       'expo-web-browser',
       [
+        // System splash (incl. the Android 12+ SplashScreen API): the brand
+        // mark on cream. The full logo+name+tagline lockup is shown right after
+        // launch by the in-app <BrandSplash> overlay (Android 12 only allows a
+        // centered, circle-masked icon here — never a wide lockup).
+        'expo-splash-screen',
+        {
+          image: './assets/splash-mark.png',
+          imageWidth: 120,
+          resizeMode: 'contain',
+          backgroundColor: '#fcf9f4',
+        },
+      ],
+      [
         'expo-notifications',
         {
           icon: './assets/notification-icon.png',
-          color: '#9d3d2c',
+          color: '#F97316',
           androidMode: 'default',
         },
       ],

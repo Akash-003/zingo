@@ -125,7 +125,7 @@ export default function SubscriptionScreen() {
             <View style={styles.heroIcon}>
               <Ionicons name="star" size={28} color="#fff" />
             </View>
-            <Text style={styles.heroTitle}>QuoteFlow Premium</Text>
+            <Text style={styles.heroTitle}>Zingo Premium</Text>
             <View style={styles.statusPill}>
               <View style={[styles.statusDot, willNotRenew && styles.statusDotEnding]} />
               <Text style={styles.statusPillText}>{statusPill}</Text>
