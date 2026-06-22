@@ -1,14 +1,21 @@
-# QuoteFlow — Claude Code Project Context
+# Zingo (codebase: QuoteFlow) — Claude Code Project Context
 
 > Read this file fully before writing any code. It contains everything you need
 > to understand the project, its architecture, design integration, and coding conventions.
+
+> **Branding note:** The app ships to users as **Zingo** ("Daily status app"). The
+> codebase, repo, Expo `slug`, deep-link `scheme`, and native bundle/package ids are
+> still `quoteflow` / `com.footprint.quoteflow` **on purpose** — they are tied to the
+> EAS project, the Supabase Google-OAuth redirect, and store/app identity, so renaming
+> them would break updates, builds, and sign-in. So: **user-facing strings = "Zingo";
+> internal identifiers = "quoteflow".** See §19 for the full rebrand map.
 
 ---
 
 ## 1. What This App Is
 
-**QuoteFlow** is a React Native mobile app (iOS + Android) for discovering, personalizing,
-and sharing quote cards on social media (WhatsApp, Instagram, Facebook).
+**Zingo** is a React Native mobile app (iOS + Android) for discovering, personalizing,
+and sharing quote/status cards on social media (WhatsApp, Instagram, Facebook).
 
 The app's **core differentiator**: every quote card automatically composites the user's
 own photo and name directly into the card design — not as a watermark, but as a structural
@@ -24,7 +31,7 @@ Reference app for inspiration: **Crafto** (https://crafto.app)
 
 | Layer              | Tool                              | Notes                                                  |
 |--------------------|-----------------------------------|--------------------------------------------------------|
-| Framework          | React Native + Expo (managed)     | Expo SDK 51+. Avoid bare workflow.                     |
+| Framework          | React Native + Expo (managed)     | Expo SDK ~54. Avoid bare workflow.                     |
 | Language           | TypeScript                        | Strict mode. No `any` types.                           |
 | Navigation         | React Navigation v6               | Stack + Bottom Tabs                                    |
 | State Management   | Zustand                           | One store per domain (user, cards, ui)                 |
@@ -38,6 +45,7 @@ Reference app for inspiration: **Crafto** (https://crafto.app)
 | Payments           | Razorpay Subscriptions            | Native SDK + Supabase Edge Functions (secret server-side) |
 | Push Notifications | expo-notifications                | Token stored in profiles.push_token                    |
 | Analytics          | Supabase (analytics_events table) | track() helper in src/services/analytics.ts            |
+| Splash Screen      | expo-splash-screen + BrandSplash  | Two-layer: native system splash + in-app lockup (§19)  |
 
 ---
 
@@ -84,7 +92,9 @@ QuoteFlow/
 ├── DESIGN.md                  ← Stitch design tokens (do not edit)
 ├── app.config.js              ← Expo config (dynamic, reads from .env)
 ├── eas.json                   ← EAS Build profiles (development/preview/production)
-├── App.tsx                    ← Entry point, NavigationContainer
+├── App.tsx                    ← Entry point. preventAutoHideAsync() + NavigationContainer
+│                                + renders <BrandSplash> overlay until it finishes
+├── assets/                    ← Zingo brand assets (icon, adaptive layers, splash, notif)
 ├── supabase/
 │   └── migrations/            ← SQL migrations; apply with: npx supabase db push
 ├── src/
@@ -109,7 +119,11 @@ QuoteFlow/
 │   │   ├── cards/
 │   │   │   └── QuoteCard.tsx           ← Core renderer: card image + photo + name overlay
 │   │   ├── BottomTabBar.tsx            ← Custom tab bar component
-│   │   ├── CategoryChips.tsx           ← Horizontal scrollable filter chips
+│   │   ├── CategoryChips.tsx           ← Single-line scrollable filter chips with
+│   │   │                                 scroll-driven edge fade gradients + peek (§19)
+│   │   ├── BrandSplash.tsx             ← Full-screen in-app Zingo lockup splash overlay (§19)
+│   │   ├── AppAlert.tsx                ← Global alert host (driven by alertStore)
+│   │   ├── PaywallModal.tsx            ← Subscribe-or-share-plain paywall
 │   │   ├── ActionButtons.tsx           ← Share / Save / Photo / Name buttons
 │   │   └── PhotoUploader.tsx           ← Image picker → Remove.bg → Supabase Storage
 │   │
@@ -124,11 +138,13 @@ QuoteFlow/
 │   │   ├── analytics.ts                ← track(uid, event, props) → analytics_events table
 │   │   ├── notifications.ts            ← registerForPushNotifications(uid)
 │   │   ├── backgroundRemoval.ts        ← Remove.bg API integration
+│   │   ├── payments.ts                 ← Razorpay subscribe/cancel via Edge Functions
 │   │   └── sharing.ts                  ← expo-sharing (share) + expo-media-library (save)
 │   │
 │   └── store/
 │       ├── userStore.ts                ← uid, name, primaryPhotoUrl, photos[], isPremium
 │       ├── cardsStore.ts               ← currentCategory, cards[], appendCards (ID-deduped)
+│       ├── alertStore.ts               ← global app-alert queue (consumed by AppAlert)
 │       └── uiStore.ts                  ← loading states, modals
 ```
 
@@ -198,7 +214,7 @@ interface NameSlot {
 ### Paywall model
 
 All content is free to browse. Premium = watermark-free sharing/downloading.
-Free users get `"Made with QuoteFlow"` baked onto every shared/saved image via
+Free users get `"Made with Zingo"` baked onto every shared/saved image via
 `showWatermark={!isPremium}` on `QuoteCard`.
 
 ---
@@ -353,7 +369,12 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
     (no Expo Go) and does **not** officially support the New Architecture
     (`newArchEnabled: true` in `app.config.js`). Verify checkout in a dev
     build; if it fails under new arch, set `newArchEnabled: false`.
-- ⬜ App icon / splash assets — `app.config.js` is wired; need design assets at `assets/`
+- ✅ Zingo rebrand — full brand swap (name, icon, adaptive icon, splash, notification
+  icon, favicon, in-app strings). Internal ids kept as `quoteflow`. See §19.
+- ✅ Splash — two-layer splash (native `expo-splash-screen` system splash + in-app
+  `<BrandSplash>` lockup overlay). See §19.
+- ✅ App icon / splash / notification assets — present in `assets/` and wired in
+  `app.config.js`. (Designed brand assets delivered by the user.)
 - ⬜ `EAS_PROJECT_ID` — run `eas init` to generate, then add to `.env`
 
 ---
@@ -416,6 +437,8 @@ All installed — `npm install` is all you need. Listed here so intent is clear.
 | `expo-sharing` | System share sheet |
 | `expo-media-library` | Save to camera roll |
 | `expo-notifications` | Push notification token + local notifications |
+| `expo-splash-screen` | Native system splash (config plugin) + preventAutoHideAsync/hideAsync control (§19) |
+| `react-native-razorpay` | Native Razorpay checkout (needs an EAS dev build — not Expo Go) |
 | `expo-web-browser` | OAuth redirect handling for Google Sign-In |
 | `expo-linking` | Deep link / redirect URL construction |
 | `expo-file-system` | File reads for binary upload to Supabase Storage |
@@ -514,6 +537,21 @@ void track(uid, 'share_card', { card_id: card.id });
 **`collapsable={false}` on QuoteCard root View** — Required for `react-native-view-shot`
 to capture the View correctly on Android. Without it, the View may be optimized away.
 
+**Splash uses `expo-splash-screen` config plugin, NOT the legacy `splash` key.** On Expo
+SDK 54 the legacy top-level `splash` key produces broken Android 12+ wiring (it sets
+`android:windowBackground` to a full-bleed drawable with no `values-v31` theme). Always
+configure splash through the `expo-splash-screen` plugin in `app.config.js`. After any
+splash/icon/color change you MUST `npx expo prebuild --clean --platform android` — the
+`android/` folder is generated/gitignored and these are baked at prebuild.
+
+**Android 12+ system splash can only show a centered, circle-masked icon** — never a wide
+logo+text lockup. That's why the full "Zingo / Daily status app" lockup is rendered by the
+in-app `<BrandSplash>` overlay (§19) instead of the native splash, which gets only the
+rounded Z mark (`assets/splash-mark.png`).
+
+**Splash is compiled into the native binary** — JS-only reloads won't show splash changes.
+To verify: `adb uninstall com.footprint.quoteflow` then `npx expo run:android`.
+
 ---
 
 ## 18. What NOT to Do
@@ -528,3 +566,78 @@ to capture the View correctly on Android. Without it, the View may be optimized 
 - ❌ Don't change DB slot values to match screen widths — apply scale in `QuoteCard` instead
 - ❌ Don't `await` analytics calls in UI handlers — use `void track(...)`
 - ❌ Don't wire phone auth without enabling it in Supabase dashboard first
+- ❌ Don't rename `slug` / `scheme` / `bundleIdentifier` / `package` to "zingo" — they
+  must stay `quoteflow` / `com.footprint.quoteflow` (breaks EAS, OAuth, store identity)
+- ❌ Don't use the legacy `splash` config key — configure splash via the
+  `expo-splash-screen` plugin (§19), then `prebuild --clean`
+
+---
+
+## 19. Branding & Splash (Zingo)
+
+### Identity split — user-facing vs internal
+The app is branded **Zingo** to users but keeps `quoteflow` internal identifiers.
+
+| Stays `quoteflow` (do NOT change) | Why |
+|-----------------------------------|-----|
+| Expo `slug: 'quoteflow'`          | Tied to the EAS project; renaming detaches updates/builds |
+| `scheme: 'quoteflow'`             | Supabase Google-OAuth redirect uses it; changing breaks sign-in |
+| `ios.bundleIdentifier` / `android.package` = `com.footprint.quoteflow` | Store + OAuth identity |
+| `package.json` `name`             | Internal only |
+
+### User-facing "Zingo" strings (the rebrand map)
+| Location | Value |
+|----------|-------|
+| `app.config.js` `name` | `Zingo` |
+| `WelcomeScreen.tsx` | `Zingo` wordmark |
+| `QuoteCard.tsx` watermark | `Made with Zingo` |
+| `ProfileScreen.tsx` / `SubscriptionScreen.tsx` | `Zingo Premium` |
+| `payments.ts` Razorpay checkout `name` | `Zingo Premium` |
+
+### Brand tokens (from the delivered logo package)
+Rose `#E11D48`, Orange `#F97316`, Amber `#FBBF24`, Ink `#1F2933`. Wordmark font: Baloo 2 700.
+Splash/lockup background: cream `#fcf9f4`. Adaptive icon background: orange `#F97316`.
+
+### Brand assets in `assets/`
+| File | Source / content | Used by |
+|------|------------------|---------|
+| `icon.png` | full-bleed gradient Z (no transparency) | iOS app icon |
+| `adaptive-icon.png` | white Z, transparent, safe-zone | Android adaptive foreground |
+| `adaptive-background.png` | gradient | Android adaptive background |
+| `splash-mark.png` | rounded gradient Z | **native system splash** (expo-splash-screen) |
+| `splash-icon.png` | full horizontal lockup (icon + "Zingo" + "Daily status app") | **in-app `<BrandSplash>`** |
+| `notification-icon.png` | white Z silhouette | expo-notifications small icon |
+| `favicon.png` | small gradient Z | web favicon |
+
+### Two-layer splash architecture
+Android 12+ only renders a centered, circle-masked icon for the system splash, so the full
+lockup can't live there. The solution is two layers:
+
+1. **Native system splash** — `expo-splash-screen` plugin in `app.config.js`
+   (`image: ./assets/splash-mark.png`, `imageWidth: 120`, `backgroundColor: '#fcf9f4'`).
+   Shows the rounded **Z mark on cream** for the brief OS-controlled frame.
+2. **In-app lockup** — `src/components/BrandSplash.tsx`, a full-screen overlay rendering
+   the complete **Zingo lockup on cream**, unmasked, on every platform. Holds
+   `HOLD_DURATION` (900ms) then fades out over `FADE_DURATION` (350ms).
+
+Wiring in `App.tsx`:
+- `SplashScreen.preventAutoHideAsync()` at module load keeps the native splash up so there's
+  no blank flash before the overlay mounts.
+- `<BrandSplash onFinish={...}>` renders while `!brandSplashDone`; it calls
+  `SplashScreen.hideAsync()` on mount (revealing the overlay), then `onFinish()` after the fade.
+
+Tunables: `HOLD_DURATION` / `FADE_DURATION` + logo size in `BrandSplash.tsx`; `imageWidth`
+for the system mark in `app.config.js`.
+
+> After any change here, `npx expo prebuild --clean --platform android`, then uninstall +
+> reinstall the dev build (splash is compiled into the binary).
+
+### CategoryChips discoverability
+The Feed filter chips are intentionally **single-line + horizontally scrollable** (not
+multi-line). `src/components/CategoryChips.tsx` adds scroll-driven edge **fade gradients**
+(left fade appears once scrolled, right fade hides at the end) plus a right-edge **peek** via
+asymmetric list padding (`paddingLeft: 16, paddingRight: 28`), signalling there's more to scroll.
+
+### Removed: Appearance & Theme
+The "Appearance & Theme" row was removed from `ProfileScreen` SETTINGS (theming is not
+implemented). `SETTINGS` now holds only Notifications and Privacy rows.
