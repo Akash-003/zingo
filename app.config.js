@@ -22,6 +22,10 @@ export default {
       package: 'com.footprint.quoteflow',
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
+      // Resize the window when the keyboard opens so bottom-anchored actions
+      // (e.g. ProfileSetup's Continue button) rise to sit just above the
+      // keyboard, letting the user continue without dismissing it.
+      softwareKeyboardLayoutMode: 'resize',
     },
     web: {
       favicon: './assets/favicon.png',

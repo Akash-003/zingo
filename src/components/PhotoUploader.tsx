@@ -7,6 +7,7 @@ import {
   View,
   Text,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../services/supabase';
 import { removeBackground } from '../services/backgroundRemoval';
@@ -16,9 +17,17 @@ import { showAlert } from '../store/alertStore';
 interface PhotoUploaderProps {
   onPhotoUploaded: (url: string) => void;
   currentPhotoUrl?: string | null;
+  // 'plus' (default): dashed circle with a ＋ — the standard add-photo affordance.
+  // 'avatar': solid light circle with a person silhouette — used on ProfileSetup,
+  // which pairs it with its own external ＋ badge.
+  placeholder?: 'plus' | 'avatar';
 }
 
-export default function PhotoUploader({ onPhotoUploaded, currentPhotoUrl }: PhotoUploaderProps) {
+export default function PhotoUploader({
+  onPhotoUploaded,
+  currentPhotoUrl,
+  placeholder = 'plus',
+}: PhotoUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const uid = useUserStore((s) => s.uid);
 
@@ -69,15 +78,25 @@ export default function PhotoUploader({ onPhotoUploaded, currentPhotoUrl }: Phot
     return data.publicUrl;
   };
 
+  const isAvatar = placeholder === 'avatar';
+
   return (
-    <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={[styles.container, isAvatar && styles.containerAvatar]}
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
       {uploading ? (
         <ActivityIndicator size="large" color="#9d3d2c" />
       ) : currentPhotoUrl ? (
         <Image source={{ uri: currentPhotoUrl }} style={styles.photo} />
       ) : (
         <View style={styles.placeholder}>
-          <Text style={styles.icon}>＋</Text>
+          {isAvatar ? (
+            <Ionicons name="person" size={46} color="#b0a098" />
+          ) : (
+            <Text style={styles.icon}>＋</Text>
+          )}
         </View>
       )}
     </TouchableOpacity>
@@ -96,6 +115,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     backgroundColor: '#f6f3ee',
+  },
+  containerAvatar: {
+    borderStyle: 'solid',
+    borderColor: '#cdbfb9',
   },
   photo: {
     width: 96,

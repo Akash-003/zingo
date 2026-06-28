@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   Image,
+  Keyboard,
+  Animated,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import PhotoUploader from '../../components/PhotoUploader';
 import { supabase } from '../../services/supabase';
@@ -27,6 +28,50 @@ export default function ProfileSetupScreen() {
 
   const [nameInput, setNameInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [nameError, setNameError] = useState(false);
+  const [kbHeight, setKbHeight] = useState(0);
+  const nameRef = useRef<TextInput>(null);
+  const pulse = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+  const kbVisible = kbHeight > 0;
+
+  // Gently pulse a halo around the photo circle to nudge the (otherwise easy to
+  // miss) photo action. Runs only while no photo is set; native driver is fine
+  // here — unlike the WelcomeScreen deck there's no per-frame index reset.
+  useEffect(() => {
+    if (primaryPhotoUrl) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 900, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [primaryPhotoUrl, pulse]);
+
+  // Open the keyboard with the name field focused on arrival. The short delay
+  // lets the auth→ProfileSetup navigation transition settle — the bare
+  // autoFocus prop is unreliable right after a transition.
+  useEffect(() => {
+    const t = setTimeout(() => nameRef.current?.focus(), 350);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Track the keyboard height. Under edgeToEdgeEnabled the Android window does
+  // not resize for the keyboard (and neither adjustResize nor
+  // KeyboardAvoidingView lifts content), so we pad the layout by the keyboard
+  // height ourselves to keep the actions above it.
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) =>
+      setKbHeight(e.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const handlePhotoUploaded = (url: string) => {
     setPrimaryPhotoUrl(url);
@@ -57,9 +102,14 @@ export default function ProfileSetupScreen() {
     }
   };
 
+  const handleNameChange = (text: string) => {
+    setNameInput(text);
+    if (nameError && text.trim()) setNameError(false);
+  };
+
   const handleStartExploring = () => {
     if (!nameInput.trim()) {
-      showAlert('Name required', 'Please enter your name to continue.');
+      setNameError(true);
       return;
     }
     saveProfile(nameInput);
@@ -70,19 +120,15 @@ export default function ProfileSetupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
+      <View
+        style={[
+          styles.content,
+          // SafeAreaView already reserves insets.bottom, so only pad the
+          // remaining keyboard height to land the actions just above it.
+          kbVisible && { paddingBottom: Math.max(kbHeight - insets.bottom, 24) },
+        ]}
       >
-        {/* Background decorations */}
-        <View style={styles.decorTopRight} />
-        <View style={styles.decorBottomLeft} />
-
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headline}>Make it yours</Text>
@@ -91,40 +137,33 @@ export default function ProfileSetupScreen() {
           </Text>
         </View>
 
-        {/* Card Preview */}
-        <View style={styles.previewWrapper}>
-          <View style={styles.previewDecorBlur} />
-          <View style={styles.previewCard}>
-            <View style={styles.previewAccent} />
-            <Text style={styles.previewQuote}>
-              "The beauty of belonging is that it transforms a space into a sanctuary."
-            </Text>
-            <View style={styles.previewAuthorRow}>
-              <View style={styles.previewAvatar}>
-                {primaryPhotoUrl ? (
-                  <Image source={{ uri: primaryPhotoUrl }} style={styles.previewAvatarImage} />
-                ) : (
-                  <View style={styles.previewAvatarPlaceholder} />
-                )}
-              </View>
-              <View>
-                <Text style={styles.previewName}>
-                  {nameInput.trim() || 'Your Name'}
-                </Text>
-                <Text style={styles.previewRole}>Kindred Spirit</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Form */}
+        {/* Inputs — the primary, useful elements, placed high */}
         <View style={styles.form}>
           {/* Photo Upload */}
           <View style={styles.photoSection}>
-            <PhotoUploader
-              onPhotoUploaded={handlePhotoUploaded}
-              currentPhotoUrl={primaryPhotoUrl}
-            />
+            <View style={styles.photoWrap}>
+              {!primaryPhotoUrl && (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.photoGlow,
+                    {
+                      opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.9] }),
+                    },
+                  ]}
+                />
+              )}
+              <PhotoUploader
+                onPhotoUploaded={handlePhotoUploaded}
+                currentPhotoUrl={primaryPhotoUrl}
+                placeholder="avatar"
+              />
+              {!primaryPhotoUrl && (
+                <View pointerEvents="none" style={styles.photoBadge}>
+                  <Ionicons name="add" size={18} color="#ffffff" />
+                </View>
+              )}
+            </View>
             <Text style={styles.photoLabel}>ADD YOUR PHOTO</Text>
           </View>
 
@@ -132,51 +171,87 @@ export default function ProfileSetupScreen() {
           <View style={styles.inputWrapper}>
             <Text style={styles.inputLabel}>YOUR NAME</Text>
             <TextInput
-              style={styles.input}
+              ref={nameRef}
+              style={[styles.input, nameError && styles.inputError]}
               placeholder="What should we call you?"
               placeholderTextColor="rgba(86,66,62,0.4)"
               value={nameInput}
-              onChangeText={setNameInput}
+              onChangeText={handleNameChange}
               autoCapitalize="words"
               autoCorrect={false}
               returnKeyType="done"
+              onSubmitEditing={handleStartExploring}
             />
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actions}>
-            <LinearGradient
-              colors={['#9d3d2c', '#bd5541']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradientWrapper}
-            >
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={handleStartExploring}
-                activeOpacity={0.85}
-                disabled={saving}
-              >
-                {saving ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>Start Exploring →</Text>
-                )}
-              </TouchableOpacity>
-            </LinearGradient>
-
-            <TouchableOpacity
-              style={styles.skipButton}
-              onPress={handleSkip}
-              activeOpacity={0.7}
-              disabled={saving}
-            >
-              <Text style={styles.skipButtonText}>Skip for now</Text>
-            </TouchableOpacity>
+            {nameError && (
+              <Text style={styles.errorText}>Please enter your name to continue.</Text>
+            )}
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        {/* Card Preview — secondary, fills remaining space. Hidden while the
+            keyboard is up so it doesn't clip/overlap the rising actions. */}
+        <View style={styles.previewWrapper}>
+          {!kbVisible && (
+            <View style={styles.previewCard}>
+                <View style={styles.previewChip}>
+                  <Text style={styles.previewChipText}>PREVIEW</Text>
+                </View>
+                <View style={styles.previewAccent} />
+                <Text style={styles.previewQuote}>
+                  "The beauty of belonging is that it transforms a space into a sanctuary."
+                </Text>
+                <View style={styles.previewAuthorRow}>
+                  <View style={styles.previewAvatar}>
+                    {primaryPhotoUrl ? (
+                      <Image source={{ uri: primaryPhotoUrl }} style={styles.previewAvatarImage} />
+                    ) : (
+                      <View style={styles.previewAvatarPlaceholder} />
+                    )}
+                  </View>
+                  <View>
+                    <Text style={styles.previewName}>
+                      {nameInput.trim() || 'Your Name'}
+                    </Text>
+                    <Text style={styles.previewRole}>Kindred Spirit</Text>
+                  </View>
+                </View>
+            </View>
+          )}
+        </View>
+
+        {/* Action Buttons — pinned to the bottom */}
+        <View style={styles.actions}>
+          <LinearGradient
+            colors={['#9d3d2c', '#bd5541']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.gradientWrapper, !nameInput.trim() && styles.gradientDisabled]}
+          >
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleStartExploring}
+              activeOpacity={0.85}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.primaryButtonText}>Start Exploring →</Text>
+              )}
+            </TouchableOpacity>
+          </LinearGradient>
+
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={handleSkip}
+            activeOpacity={0.7}
+            disabled={saving}
+          >
+            <Text style={styles.skipButtonText}>Skip for now</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -185,78 +260,68 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fcf9f4',
   },
-  scrollContent: {
-    flexGrow: 1,
+  content: {
+    flex: 1,
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 48,
-    gap: 48,
-  },
-  decorTopRight: {
-    position: 'absolute',
-    top: '-10%',
-    right: '-10%',
-    width: '50%',
-    height: '50%',
-    backgroundColor: 'rgba(255,180,165,0.3)',
-    borderRadius: 9999,
-  },
-  decorBottomLeft: {
-    position: 'absolute',
-    bottom: '-10%',
-    left: '-10%',
-    width: '50%',
-    height: '50%',
-    backgroundColor: 'rgba(222,230,200,0.3)',
-    borderRadius: 9999,
+    paddingVertical: 24,
+    // Tightened so the inline name error fits with the keyboard up without
+    // pushing the actions behind it (this screen never scrolls).
+    gap: 12,
   },
   header: {
     alignItems: 'center',
-    gap: 16,
+    gap: 10,
     zIndex: 1,
   },
   headline: {
-    fontSize: 44,
+    fontSize: 34,
     fontWeight: '700',
     color: '#1c1c19',
     letterSpacing: -1,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#56423e',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
     maxWidth: 320,
   },
   previewWrapper: {
+    flex: 1,
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 1,
-  },
-  previewDecorBlur: {
-    position: 'absolute',
-    inset: 0,
-    backgroundColor: 'rgba(219,227,197,0.2)',
-    borderRadius: 16,
-    transform: [{ translateX: 16 }],
   },
   previewCard: {
     width: '100%',
-    maxWidth: 320,
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 32,
-    gap: 24,
+    padding: 20,
+    gap: 14,
     shadowColor: '#1c1c19',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.06,
     shadowRadius: 24,
     elevation: 4,
     borderWidth: 1,
     borderColor: 'rgba(221,192,187,0.1)',
-    transform: [{ rotate: '1deg' }],
+  },
+  previewChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(157,61,44,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  previewChipText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#9d3d2c',
+    letterSpacing: 2,
   },
   previewAccent: {
     width: 48,
@@ -265,16 +330,16 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   previewQuote: {
-    fontSize: 18,
+    fontSize: 16,
     fontStyle: 'italic',
     color: '#1c1c19',
-    lineHeight: 26,
+    lineHeight: 23,
   },
   previewAuthorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    paddingTop: 16,
+    gap: 12,
+    paddingTop: 4,
   },
   previewAvatar: {
     width: 48,
@@ -294,10 +359,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(235,232,227,0.8)',
   },
   previewName: {
-    fontSize: 14,
+    fontSize: 17,
     fontWeight: '700',
     color: '#1c1c19',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   previewRole: {
     fontSize: 11,
@@ -310,12 +375,39 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
-    gap: 40,
+    gap: 28,
     zIndex: 1,
   },
   photoSection: {
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    marginVertical: 10,
+  },
+  photoWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#9d3d2c',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fcf9f4',
+  },
+  photoGlow: {
+    position: 'absolute',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    // Pure accent halo — no fill, so it reads as a glow, not a second circle.
+    // boxShadow is supported on iOS + Android in RN 0.81.
+    boxShadow: '0px 0px 22px 6px rgba(157,61,44,0.6)',
   },
   photoLabel: {
     fontSize: 12,
@@ -325,34 +417,41 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     width: '100%',
-    position: 'relative',
+    gap: 8,
   },
   inputLabel: {
-    position: 'absolute',
-    top: -10,
-    left: 16,
-    backgroundColor: '#fcf9f4',
-    paddingHorizontal: 8,
-    fontSize: 10,
+    marginLeft: 4,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#89726d',
-    letterSpacing: 2,
-    zIndex: 1,
+    color: '#9d3d2c',
+    letterSpacing: 3,
   },
   input: {
     width: '100%',
-    height: 64,
-    paddingHorizontal: 24,
+    height: 54,
+    paddingHorizontal: 20,
     backgroundColor: '#f6f3ee',
-    borderRadius: 16,
-    fontSize: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(221,192,187,0.4)',
+    fontSize: 16,
     color: '#1c1c19',
+  },
+  inputError: {
+    borderColor: '#c0392b',
+  },
+  errorText: {
+    marginLeft: 4,
+    marginTop: 6,
+    fontSize: 12,
+    color: '#c0392b',
   },
   actions: {
     width: '100%',
+    maxWidth: 360,
     alignItems: 'center',
-    gap: 24,
-    paddingTop: 16,
+    gap: 12,
+    paddingTop: 6,
   },
   gradientWrapper: {
     width: '100%',
@@ -363,9 +462,12 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 6,
   },
+  gradientDisabled: {
+    opacity: 0.45,
+  },
   primaryButton: {
     width: '100%',
-    height: 64,
+    height: 52,
     alignItems: 'center',
     justifyContent: 'center',
   },

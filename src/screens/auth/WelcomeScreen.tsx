@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,127 @@ import {
   Image,
   ActivityIndicator,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
+  Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../hooks/useAuth';
 import { showAlert } from '../../store/alertStore';
+
+// Sample cards for the auto-cycling preview deck. Gradients use the Zingo
+// brand ramp (amber → orange → rose).
+const SAMPLES = [
+  {
+    tag: 'GOOD MORNING',
+    quote: 'The simplest moments often hold the most profound weight.',
+    author: 'A. RIVERA',
+    colors: ['#FBBF24', '#F97316'] as const,
+  },
+  {
+    tag: 'MOTIVATION',
+    quote: 'Begin again. Every sunrise is a quiet invitation to start.',
+    author: 'M. OKAFOR',
+    colors: ['#F97316', '#E11D48'] as const,
+  },
+  {
+    tag: 'LIFE',
+    quote: 'You are the story you keep choosing to tell yourself.',
+    author: 'S. KAPOOR',
+    colors: ['#E11D48', '#9d3d2c'] as const,
+  },
+];
+
+const CYCLE_MS = 2800; // time each card stays in front
+const ANIM_MS = 600; // duration of the advance animation
+
+// Visual params per stack position, indexed by position + 1 so we can address
+// the exit (-1) and incoming (3) slots too: [exit, front, mid, back, incoming].
+const POS = [
+  { ty: -84, scale: 1.04, rot: -9, op: 0 },
+  { ty: 0, scale: 1.0, rot: -3, op: 1 },
+  { ty: 16, scale: 0.92, rot: 4, op: 1 },
+  { ty: 30, scale: 0.84, rot: -4, op: 0.85 },
+  { ty: 44, scale: 0.78, rot: 3, op: 0 },
+];
+const slot = (p: number) => POS[p + 1];
+
+function QuoteDeck() {
+  const [index, setIndex] = useState(0);
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: ANIM_MS,
+        // JS-driven on purpose: the per-cycle reset (setValue(0) in the layout
+        // effect below) must apply atomically with the new index in one commit.
+        // With the native driver the reset and the new interpolation configs are
+        // separate UI-thread commands and intermittently tear → one-frame flicker.
+        useNativeDriver: false,
+      }).start(({ finished }) => {
+        if (finished) setIndex((i) => (i + 1) % SAMPLES.length);
+      });
+    }, CYCLE_MS);
+    return () => clearInterval(id);
+  }, [anim]);
+
+  // Reset the animation in the SAME commit as the new index (before paint), so
+  // the end-of-cycle frame and the reset frame render identical output. Doing
+  // this in the timing callback instead races the re-render and flickers.
+  useLayoutEffect(() => {
+    anim.setValue(0);
+  }, [index, anim]);
+
+  // Render 4 layers (back → front). The 4th duplicates the exiting card so the
+  // loop is seamless: as slot j animates to slot j-1, slot j-1 starts the next
+  // tick exactly where j left off.
+  return (
+    <View style={styles.deck}>
+      {[3, 2, 1, 0].map((j) => {
+        const sample = SAMPLES[(index + j) % SAMPLES.length];
+        const from = slot(j);
+        const to = slot(j - 1);
+        const animatedStyle = {
+          opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [from.op, to.op] }),
+          zIndex: 10 - j,
+          transform: [
+            { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [from.ty, to.ty] }) },
+            { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [from.scale, to.scale] }) },
+            {
+              rotate: anim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [`${from.rot}deg`, `${to.rot}deg`],
+              }),
+            },
+          ],
+        };
+        return (
+          <Animated.View key={j} style={[styles.deckCard, animatedStyle]}>
+            <LinearGradient
+              colors={sample.colors}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.deckImage}
+            >
+              <Text style={styles.deckTag}>{sample.tag}</Text>
+            </LinearGradient>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardQuote} numberOfLines={3}>
+                “{sample.quote}”
+              </Text>
+              <View style={styles.cardDividerRow}>
+                <View style={styles.cardDivider} />
+                <Text style={styles.cardAuthor}>{sample.author}</Text>
+              </View>
+            </View>
+          </Animated.View>
+        );
+      })}
+    </View>
+  );
+}
 
 export default function WelcomeScreen() {
   const { signInWithGoogle, signInAsGuest } = useAuth();
@@ -41,42 +156,19 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fcf9f4" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.brandName}>Zingo</Text>
-      </View>
 
       {/* Hero */}
       <View style={styles.hero}>
-        <Text style={styles.welcomeLabel}>WELCOME</Text>
-        <Text style={styles.heroText}>Your photo.{'\n'}Your words.{'\n'}Every day.</Text>
+        <Text style={styles.heroText}>
+          Daily Status,{'\n'}
+          In Your <Text style={styles.heroAccent}>Style</Text>
+        </Text>
       </View>
 
-      {/* Card Preview */}
-      <View style={styles.cardWrapper}>
-        <View style={styles.cardDecor} />
-        <View style={styles.card}>
-          <View style={styles.cardImageContainer}>
-            <Image
-              source={{ uri: 'https://placehold.co/400x600/f6f3ee/9d3d2c?text=Good+Morning' }}
-              style={styles.cardImage}
-              resizeMode="cover"
-            />
-          </View>
-          <View style={styles.cardContent}>
-            <Text style={styles.cardQuote}>
-              "The simplest moments often hold the most profound weight."
-            </Text>
-            <View style={styles.cardDividerRow}>
-              <View style={styles.cardDivider} />
-              <Text style={styles.cardAuthor}>A. RIVERA</Text>
-            </View>
-          </View>
-        </View>
-      </View>
+      {/* Auto-cycling card preview */}
+      <QuoteDeck />
 
       {/* Auth Buttons */}
       <View style={styles.buttonGroup}>
@@ -140,82 +232,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
   },
-  header: {
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  brandName: {
-    fontSize: 24,
-    fontStyle: 'italic',
-    fontWeight: '700',
-    color: '#9d3d2c',
-    letterSpacing: -0.5,
-  },
   hero: {
     alignItems: 'center',
     gap: 4,
-    marginBottom: 16,
-  },
-  welcomeLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 3,
-    color: '#56423e',
-    textTransform: 'uppercase',
+    marginTop: 24, // 24px below the status bar (safe-area top inset is added by SafeAreaView)
   },
   heroText: {
-    fontSize: 30,
-    fontWeight: '700',
+    fontSize: 36,
+    fontWeight: '600',
     color: '#1c1c19',
     textAlign: 'center',
-    lineHeight: 38,
+    lineHeight: 42,
+    letterSpacing: -0.8,
     paddingHorizontal: 16,
   },
-  cardWrapper: {
+  heroAccent: {
+    color: '#9d3d2c',
+    fontStyle: 'italic',
+    fontWeight: '500',
+  },
+  deck: {
+    flex: 1, // fills the space between the hero and the buttons
     width: '100%',
-    maxWidth: 280,
     alignItems: 'center',
-    marginBottom: 24,
+    justifyContent: 'center',
+    marginVertical: 16,
   },
-  cardDecor: {
+  deckCard: {
     position: 'absolute',
-    inset: -4,
-    top: -4,
-    left: -4,
-    right: -4,
-    bottom: -4,
-    backgroundColor: 'rgba(219,227,197,0.3)',
-    borderRadius: 16,
-    transform: [{ rotate: '-1deg' }],
-    zIndex: 0,
-  },
-  card: {
-    width: '100%',
+    width: 248,
     backgroundColor: '#ffffff',
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#1c1c19',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
     shadowRadius: 16,
-    elevation: 4,
+    elevation: 6,
     borderWidth: 1,
     borderColor: 'rgba(221,192,187,0.15)',
     padding: 12,
-    gap: 12,
-    zIndex: 1,
+    gap: 10,
   },
-  cardImageContainer: {
-    aspectRatio: 4 / 5,
+  deckImage: {
     width: '100%',
+    aspectRatio: 4 / 5,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#f0ede9',
+    justifyContent: 'flex-end',
+    padding: 12,
   },
-  cardImage: {
-    width: '100%',
-    height: '100%',
+  deckTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: 'rgba(255,255,255,0.95)',
   },
   cardContent: {
     paddingHorizontal: 4,
@@ -224,7 +295,7 @@ const styles = StyleSheet.create({
   cardQuote: {
     fontStyle: 'italic',
     fontSize: 13,
-    lineHeight: 20,
+    lineHeight: 19,
     color: '#1c1c19',
   },
   cardDividerRow: {
@@ -248,7 +319,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 8,
     gap: 12,
-    marginBottom: 12,
   },
   googleButton: {
     width: '100%',
@@ -297,7 +367,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 280,
     lineHeight: 16,
-    paddingBottom: 16,
+    marginTop: 24, // 24px above the footer → below the buttons
+    marginBottom: 24, // 24px above the nav bar (safe-area bottom inset is added by SafeAreaView)
   },
   footerLink: {
     textDecorationLine: 'underline',
