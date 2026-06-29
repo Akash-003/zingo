@@ -33,6 +33,10 @@ export default {
     scheme: 'quoteflow',
     plugins: [
       'expo-web-browser',
+      // Native Google Sign-In (in-app account picker). Android needs an OAuth
+      // Android client registered with the build's SHA-1; iOS later needs an
+      // iosUrlScheme option here.
+      '@react-native-google-signin/google-signin',
       [
         // System splash (incl. the Android 12+ SplashScreen API): the brand
         // mark on cream. The full logo+name+tagline lockup is shown right after
@@ -59,6 +63,9 @@ export default {
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
       REMOVE_BG_API_KEY: process.env.REMOVE_BG_API_KEY,
+      // Google Web (OAuth) client ID — used as the audience for the native
+      // ID token that Supabase verifies. Not the Android client ID.
+      GOOGLE_WEB_CLIENT_ID: process.env.GOOGLE_WEB_CLIENT_ID,
       // Public Razorpay key id only. The key SECRET and webhook secret live
       // in Supabase Edge Function secrets — never in the app bundle.
       RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
