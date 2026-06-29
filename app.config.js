@@ -47,6 +47,14 @@ export default {
         },
       ],
       [
+        'expo-media-library',
+        {
+          photosPermission: 'Allow Zingo to save cards to your photo library.',
+          savePhotosPermission: 'Allow Zingo to save cards to your photo library.',
+          isAccessMediaLocationEnabled: false,
+        },
+      ],
+      [
         'expo-notifications',
         {
           icon: './assets/notification-icon.png',

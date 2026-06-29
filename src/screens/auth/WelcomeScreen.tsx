@@ -8,8 +8,13 @@ import {
   StyleSheet,
   StatusBar,
   Animated,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+const { height: SCREEN_H } = Dimensions.get('window');
+// ponytail: scale card down on short screens so it never overflows into button area
+const CARD_WIDTH = Math.min(248, Math.floor(SCREEN_H * 0.3));
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../hooks/useAuth';
 import { showAlert } from '../../store/alertStore';
@@ -129,6 +134,7 @@ function QuoteDeck() {
 }
 
 export default function WelcomeScreen() {
+  const insets = useSafeAreaInsets();
   const { signInWithGoogle, signInAsGuest } = useAuth();
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingGuest, setLoadingGuest] = useState(false);
@@ -156,7 +162,7 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.root, { paddingBottom: Math.max(insets.bottom, 16) }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fcf9f4" />
 
       {/* Hero */}
@@ -260,7 +266,7 @@ const styles = StyleSheet.create({
   },
   deckCard: {
     position: 'absolute',
-    width: 248,
+    width: CARD_WIDTH,
     backgroundColor: '#ffffff',
     borderRadius: 16,
     overflow: 'hidden',
@@ -319,6 +325,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 8,
     gap: 12,
+    zIndex: 10,
   },
   googleButton: {
     width: '100%',
@@ -368,7 +375,7 @@ const styles = StyleSheet.create({
     maxWidth: 280,
     lineHeight: 16,
     marginTop: 24, // 24px above the footer → below the buttons
-    marginBottom: 24, // 24px above the nav bar (safe-area bottom inset is added by SafeAreaView)
+    marginBottom: 24,
   },
   footerLink: {
     textDecorationLine: 'underline',
