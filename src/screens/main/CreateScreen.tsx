@@ -5,17 +5,21 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Modal,
   PanResponder,
   Dimensions,
   ActivityIndicator,
   StyleSheet,
+  Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../../services/supabase';
 import { track } from '../../services/analytics';
 import { useUserStore } from '../../store/userStore';
@@ -53,7 +57,12 @@ export default function CreateScreen() {
   const [isPublic, setIsPublic] = useState(false);
   const [personalizable, setPersonalizable] = useState(true);
   const [publishing, setPublishing] = useState(false);
+  const [inspiration, setInspiration] = useState<{ id: string; image_url: string }[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const sparkle = useRef(new Animated.Value(1)).current;
 
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const uid = useUserStore((s) => s.uid);
   const name = useUserStore((s) => s.name);
 
@@ -188,7 +197,10 @@ export default function CreateScreen() {
       setIsPublic(false);
       setPersonalizable(true);
       resetHandles();
-      showAlert('Card Published!', msg);
+      showAlert('Card Published!', msg, [
+        { text: 'View My Cards', onPress: () => navigation.navigate('Collections' as never) },
+        { text: 'OK', style: 'cancel' },
+      ]);
     } catch {
       showAlert('Publish failed', 'Could not publish your card. Please try again.');
     } finally {
@@ -200,6 +212,25 @@ export default function CreateScreen() {
   useEffect(() => { circleSizeRef.current = circleSize; }, [circleSize]);
   useEffect(() => { photoPosRef.current = photoPos; }, [photoPos]);
   useEffect(() => { namePosRef.current = namePos; }, [namePos]);
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(sparkle, { toValue: 1.5, duration: 700, useNativeDriver: true }),
+        Animated.timing(sparkle, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [sparkle]);
+
+  useEffect(() => {
+    supabase
+      .from('cards')
+      .select('id, image_url')
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+      .limit(8)
+      .then(({ data }) => { if (data) setInspiration(data); });
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -251,28 +282,49 @@ export default function CreateScreen() {
               <Text style={styles.changeBtnText}>Change</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <TouchableOpacity style={styles.pickZone} onPress={pickImage} activeOpacity={0.7}>
-            <Ionicons name="add-circle-outline" size={52} color="#9d3d2c" />
-            <Text style={styles.pickTitle}>Upload Card Image</Text>
-            <Text style={styles.pickLabel}>Tap to choose from your gallery</Text>
-          </TouchableOpacity>
-        )}
+        ) : null}
 
-        {/* Step hints — shown only on empty state */}
+        {/* Empty state — inspiration first, how-it-works second, upload at bottom */}
         {!imageUri && (
-          <View style={styles.stepsCard}>
-            <Text style={styles.stepsHeading}>How it works</Text>
-            {STEPS.map((step, i) => (
-              <View key={step.label} style={styles.stepRow}>
-                <View style={styles.stepNum}>
-                  <Text style={styles.stepNumText}>{i + 1}</Text>
+          <>
+            {/* How it works */}
+            <View style={styles.stepsCard}>
+              <Text style={styles.stepsHeading}>HOW IT WORKS</Text>
+              {STEPS.map((step, i) => (
+                <View key={step.label} style={styles.stepRow}>
+                  <View style={styles.stepNum}>
+                    <Text style={styles.stepNumText}>{i + 1}</Text>
+                  </View>
+                  <Ionicons name={step.icon} size={18} color="#9d3d2c" style={styles.stepIcon} />
+                  <Text style={styles.stepLabel}>{step.label}</Text>
                 </View>
-                <Ionicons name={step.icon} size={18} color="#9d3d2c" style={styles.stepIcon} />
-                <Text style={styles.stepLabel}>{step.label}</Text>
+              ))}
+            </View>
+
+            {/* Upload zone */}
+            <TouchableOpacity style={styles.pickZone} onPress={pickImage} activeOpacity={0.7}>
+              <Ionicons name="add-circle-outline" size={40} color="#9d3d2c" />
+              <Text style={styles.pickTitle}>Upload Card Image</Text>
+              <Text style={styles.pickLabel}>Tap to choose from your gallery</Text>
+            </TouchableOpacity>
+
+            {/* Inspiration strip */}
+            {inspiration.length > 0 && (
+              <View style={styles.inspirationSection}>
+                <View style={styles.inspirationTitleRow}>
+                  <Animated.Text style={{ fontSize: 18, transform: [{ scale: sparkle }] }}>✨</Animated.Text>
+                  <Text style={styles.inspirationHeading}>GET INSPIRED</Text>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inspirationRow}>
+                  {inspiration.map((card) => (
+                    <TouchableOpacity key={card.id} onPress={() => setPreviewUrl(card.image_url)} activeOpacity={0.85}>
+                      <Image source={{ uri: card.image_url }} style={styles.inspirationThumb} />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
-            ))}
-          </View>
+            )}
+          </>
         )}
 
         {/* Controls — shown only when image is picked */}
@@ -414,6 +466,15 @@ export default function CreateScreen() {
           </>
         )}
       </ScrollView>
+
+      <Modal visible={!!previewUrl} transparent animationType="fade" onRequestClose={() => setPreviewUrl(null)}>
+        <TouchableOpacity style={styles.previewOverlay} activeOpacity={1} onPress={() => setPreviewUrl(null)}>
+          {previewUrl && <Image source={{ uri: previewUrl }} style={styles.previewImage} resizeMode="contain" />}
+          <TouchableOpacity style={styles.previewClose} onPress={() => setPreviewUrl(null)}>
+            <Ionicons name="close" size={22} color="#fff" />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -421,13 +482,13 @@ export default function CreateScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fcf9f4' },
   scroll: { flex: 1 },
-  content: { padding: 16, paddingBottom: 100 },
+  content: { padding: 16, paddingBottom: 96 },
   heading: { fontSize: 24, fontWeight: '700', color: '#1c1c19', marginBottom: 20 },
 
   // Card zone
   pickZone: {
     width: PREVIEW_WIDTH,
-    height: PREVIEW_HEIGHT,
+    height: 180,
     borderStyle: 'dashed',
     borderWidth: 2,
     borderColor: '#9d3d2c',
@@ -444,16 +505,17 @@ const styles = StyleSheet.create({
   // Step hints
   stepsCard: {
     backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    gap: 16,
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  stepsHeading: { fontSize: 14, fontWeight: '700', color: '#56423e', letterSpacing: 0.5 },
+  stepsHeading: { fontSize: 11, fontWeight: '700', color: '#89726d', letterSpacing: 1.5 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   stepNum: {
     width: 24, height: 24, borderRadius: 12,
@@ -570,6 +632,19 @@ const styles = StyleSheet.create({
   visBtnActive: { backgroundColor: '#9d3d2c', borderColor: '#9d3d2c' },
   visBtnText: { fontSize: 15, color: '#89726d', fontWeight: '600' },
   visBtnTextActive: { color: '#fff' },
+
+  // Inspiration strip
+  inspirationSection: { marginTop: 4 },
+  inspirationTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  inspirationHeading: { fontSize: 16, fontWeight: '800', color: '#1c1c19', letterSpacing: 0.5 },
+  inspirationRow: { gap: 10, paddingBottom: 4 },
+  inspirationThumb: { width: 100, height: 150, borderRadius: 12, backgroundColor: '#ebe8e3' },
+
+
+  // Inspiration preview modal
+  previewOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center' },
+  previewImage: { width: '90%', height: '80%' },
+  previewClose: { position: 'absolute', top: 52, right: 20, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
 
   // CTA
   ctaBtn: { backgroundColor: '#9d3d2c', borderRadius: 99, paddingVertical: 16, alignItems: 'center' },

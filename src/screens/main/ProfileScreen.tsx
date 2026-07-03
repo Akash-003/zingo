@@ -69,6 +69,9 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.getParent()?.navigate('Discover' as never)}>
+        <Ionicons name="chevron-back" size={24} color="#1c1c19" />
+      </TouchableOpacity>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -143,10 +146,6 @@ export default function ProfileScreen() {
             Switch between your curated visual identities.
           </Text>
 
-          {loading && (
-            <ActivityIndicator size="small" color="#9d3d2c" style={styles.loadingIndicator} />
-          )}
-
           <View style={styles.vaultRow}>
             {photos.map((url) => {
               const isPrimary = url === primaryPhotoUrl;
@@ -157,10 +156,11 @@ export default function ProfileScreen() {
                   onPress={() => !isPrimary && handleSetPrimary(url)}
                   activeOpacity={isPrimary ? 1 : 0.7}
                 >
-                  <View style={[styles.vaultCircle, isPrimary && styles.primaryRing]}>
+                  <View style={styles.vaultCircle}>
                     <View style={styles.vaultPhotoWrap}>
                       <Image source={{ uri: url }} style={styles.vaultPhoto} />
                     </View>
+                    {isPrimary && <View style={styles.primaryRing} pointerEvents="none" />}
                   </View>
                   <Text style={styles.vaultLabel}>{isPrimary ? 'Primary' : 'Set Primary'}</Text>
                 </TouchableOpacity>
@@ -169,11 +169,14 @@ export default function ProfileScreen() {
 
             {photos.length < 5 &&
               Array.from({ length: emptySlots }).map((_, i) => (
-                <PhotoUploader
-                  key={`empty-${i}`}
-                  onPhotoUploaded={handleAddPhoto}
-                  currentPhotoUrl={null}
-                />
+                <View key={`empty-${i}`} style={styles.vaultSlot}>
+                  <PhotoUploader
+                    onPhotoUploaded={handleAddPhoto}
+                    currentPhotoUrl={null}
+                    size={54}
+                  />
+                  <Text style={styles.vaultLabel}>Add</Text>
+                </View>
               ))}
           </View>
         </View>
@@ -212,6 +215,32 @@ export default function ProfileScreen() {
             <Text style={[styles.settingsLabel, styles.signOutLabel]}>Sign Out</Text>
           </TouchableOpacity>
         </View>
+
+        {__DEV__ && (
+          <View style={styles.adminSection}>
+            <TouchableOpacity
+              style={styles.adminLink}
+              onPress={() => navigation.navigate('CardReview' as never)}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.adminLinkText}>Admin: Review Card Name Slots</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.adminLink}
+              onPress={() => navigation.navigate('NameSlotAdjust' as never)}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.adminLinkText}>Admin: Adjust Name Positions</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.adminLink}
+              onPress={() => navigation.navigate('PhotoSlotAdjust' as never)}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.adminLinkText}>Admin: Adjust Photo Positions</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       {/* Edit primary photo modal */}
@@ -249,6 +278,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fcf9f4' },
+  backButton: { position: 'absolute', top: 50, left: 10, zIndex: 10, padding: 6 },
   scroll: { flex: 1 },
   content: { paddingBottom: 100 },
 
@@ -337,13 +367,13 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 18, fontWeight: '700', color: '#1c1c19', marginBottom: 4 },
   cardSubtitle: { fontSize: 13, color: '#89726d', marginBottom: 16 },
   loadingIndicator: { marginVertical: 8 },
-  vaultRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  vaultRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   vaultSlot: { alignItems: 'center', gap: 6 },
-  vaultCircle: { width: 96, height: 96, borderRadius: 48 },
-  primaryRing: { borderWidth: 3, borderColor: '#9d3d2c' },
-  vaultPhotoWrap: { flex: 1, borderRadius: 48, overflow: 'hidden', margin: 2 },
-  vaultPhoto: { width: '100%', height: '100%' },
-  vaultLabel: { fontSize: 11, color: '#56423e' },
+  vaultCircle: { width: 54, height: 54 },
+  primaryRing: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 27, borderWidth: 3, borderColor: '#9d3d2c' },
+  vaultPhotoWrap: { width: 54, height: 54, borderRadius: 27, overflow: 'hidden' },
+  vaultPhoto: { width: 54, height: 54 },
+  vaultLabel: { fontSize: 10, color: '#56423e' },
 
   // Settings
   settingsSection: {
@@ -370,6 +400,9 @@ const styles = StyleSheet.create({
   signOutIcon: { backgroundColor: '#fdf0f0' },
   settingsLabel: { flex: 1, fontSize: 15, color: '#1c1c19' },
   signOutLabel: { color: '#ba1a1a' },
+  adminSection: { alignItems: 'center', paddingVertical: 12, gap: 4 },
+  adminLink: { alignItems: 'center', paddingVertical: 8 },
+  adminLinkText: { fontSize: 12, color: '#c8b5af' },
 
   // Modal
   modalOverlay: {

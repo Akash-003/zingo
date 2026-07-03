@@ -135,8 +135,6 @@ export default function ProfileSetupScreen() {
       <View
         style={[
           styles.content,
-          // SafeAreaView already reserves insets.bottom, so only pad the
-          // remaining keyboard height to land the actions just above it.
           kbVisible && { paddingBottom: Math.max(kbHeight - insets.bottom, 24) },
         ]}
       >
@@ -149,7 +147,7 @@ export default function ProfileSetupScreen() {
         </View>
 
         {/* Inputs — the primary, useful elements, placed high */}
-        <View style={styles.form}>
+        <View style={[styles.form, kbVisible && { gap: 10 }]}>
           {/* Photo Upload */}
           <View style={styles.photoSection}>
             <View style={styles.photoWrap}>
@@ -276,8 +274,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 24,
-    // Tightened so the inline name error fits with the keyboard up without
-    // pushing the actions behind it (this screen never scrolls).
     gap: 12,
   },
   header: {
@@ -428,7 +424,7 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     width: '100%',
-    gap: 8,
+    gap: 10,
   },
   inputLabel: {
     marginLeft: 4,
@@ -439,7 +435,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    height: 54,
+    height: 50,
     paddingHorizontal: 20,
     backgroundColor: '#f6f3ee',
     borderRadius: 14,
@@ -453,7 +449,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     marginLeft: 4,
-    marginTop: 6,
+    marginTop: 0,
     fontSize: 12,
     color: '#c0392b',
   },
@@ -461,8 +457,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
-    gap: 12,
-    paddingTop: 6,
+    gap: 20,
+    paddingTop: 0,
   },
   gradientWrapper: {
     width: '100%',
@@ -478,7 +474,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     width: '100%',
-    height: 52,
+    height: 45,
     alignItems: 'center',
     justifyContent: 'center',
   },

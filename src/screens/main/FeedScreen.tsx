@@ -74,8 +74,8 @@ function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
       const uri = await capture(ref);
       await action(uri);
       void track(uid, event, { card_id: card.id, category: card.category });
-    } catch {
-      showAlert('Error', 'Something went wrong. Please try again.');
+    } catch (err) {
+      showAlert('Error', err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setLoadingAction(null);
     }
@@ -167,6 +167,7 @@ function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
           showWatermark={!isPremium || pendingPlainEvent !== null}
         />
       </View>
+
       <ActionButtons
         onShare={handleShare}
         onDownload={handleDownload}

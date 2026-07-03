@@ -12,7 +12,7 @@ export async function shareCard(uri: string): Promise<void> {
 }
 
 export async function downloadCard(uri: string): Promise<void> {
-  const { status } = await MediaLibrary.requestPermissionsAsync();
+  const { status } = await MediaLibrary.requestPermissionsAsync(true);
   if (status !== 'granted') {
     showAlert('Permission required', 'Please allow photo library access to save the card.');
     return;

@@ -1,11 +1,11 @@
 import { RefObject, useEffect, useState } from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
+import ImageColors from 'react-native-image-colors';
 import { Card } from '../../store/cardsStore';
 
-// Fallback aspect ratio (width / height) used until the real image size loads.
 const FALLBACK_ASPECT = 2 / 3;
-// Slot coordinates are authored against a 400px-wide canvas.
 const CANVAS_WIDTH = 400;
+const STRIP_HEIGHT = 52;
 
 interface QuoteCardProps {
   card: Card;
@@ -17,49 +17,66 @@ interface QuoteCardProps {
 export default function QuoteCard({ card, user, cardRef, showWatermark }: QuoteCardProps) {
   const [areaWidth, setAreaWidth] = useState(0);
   const [areaHeight, setAreaHeight] = useState(0);
-  // Intrinsic aspect ratio (width / height) of the card image; defaults to a
-  // fallback ratio until the real size loads.
+  const [stripBg, setStripBg] = useState('#1c1c19');
+  const [stripTextDark, setStripTextDark] = useState(false);
   const [imageAspect, setImageAspect] = useState(FALLBACK_ASPECT);
 
   useEffect(() => {
     let active = true;
     Image.getSize(
       card.imageUrl,
-      (w, h) => {
-        if (active && h > 0) setImageAspect(w / h);
-      },
-      () => {
-        // Fall back to the default ratio if the size can't be read.
-        if (active) setImageAspect(FALLBACK_ASPECT);
-      }
+      (w, h) => { if (active && h > 0) setImageAspect(w / h); },
+      () => { if (active) setImageAspect(FALLBACK_ASPECT); }
     );
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [card.imageUrl]);
 
-  // Fit the image inside the available feed area at its real aspect ratio. The
-  // resulting rectangle *is* the card: the outer area provides the blank bands
-  // for a uniform feed slot, but `cardRef` points at this inner rectangle so
-  // view-shot captures only the image (no bands) when sharing / saving.
+  useEffect(() => {
+    let active = true;
+    ImageColors.getColors(card.imageUrl, { fallback: '#1c1c19', cache: true, key: card.imageUrl }).then(
+      (result) => {
+        if (!active) return;
+        const hex =
+          result.platform === 'android' ? result.dominant :
+          result.platform === 'ios' ? result.background :
+          result.platform === 'web' ? result.dominant :
+          '#1c1c19';
+        const color = hex ?? '#1c1c19';
+        setStripBg(color);
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        setStripTextDark((0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55);
+      }
+    );
+    return () => { active = false; };
+  }, [card.imageUrl]);
+
+  const ps = card.photoSlot;
+  const ns = card.nameSlot;
+  const showStrip = card.supportsPersonalization && ns == null && !!user.name;
+
+  // Fit card to area using real image aspect ratio.
   const areaAspect = areaHeight > 0 ? areaWidth / areaHeight : FALLBACK_ASPECT;
   let cardW = areaWidth;
   let cardH = areaHeight;
   if (imageAspect > areaAspect) {
-    // Image is relatively wider → fills width, blank bands top & bottom.
     cardH = areaWidth / imageAspect;
   } else if (imageAspect < areaAspect) {
-    // Image is relatively taller → fills height, blank bands left & right.
     cardW = areaHeight * imageAspect;
+    cardH = areaHeight;
   }
 
-  // Slots are positioned relative to the card (image) rectangle directly — no
-  // letterbox offset, because the captured view is exactly that rectangle.
+  // When the strip shows and the card would fill the full area height, shrink it
+  // so cardGroup (card + strip) fits exactly inside the area with no overflow.
+  if (showStrip && cardH > areaHeight - STRIP_HEIGHT) {
+    const maxH = areaHeight - STRIP_HEIGHT;
+    cardH = maxH;
+    cardW = maxH * imageAspect;
+  }
+
   const scale = cardW > 0 ? cardW / CANVAS_WIDTH : 1;
   const ready = areaWidth > 0 && areaHeight > 0;
-
-  const ps = card.photoSlot;
-  const ns = card.nameSlot;
 
   return (
     <View
@@ -69,65 +86,65 @@ export default function QuoteCard({ card, user, cardRef, showWatermark }: QuoteC
         setAreaHeight(e.nativeEvent.layout.height);
       }}
     >
-      {/* The card itself — sized to the image's real aspect ratio so there are
-          no blank bands inside it. This is the view captured for share/save. */}
-      <View
-        ref={cardRef}
-        style={[styles.card, ready ? { width: cardW, height: cardH } : null]}
-        collapsable={false}
-      >
-        {/* Pre-designed card image. The card is sized to the image's aspect
-            ratio, so `cover` fills it exactly with no cropping. */}
-        <Image
-          source={{ uri: card.imageUrl }}
-          style={StyleSheet.absoluteFill}
-          resizeMode="cover"
-        />
+      {/* cardGroup is centered as a unit — strip sits flush below image, no gap */}
+      <View style={styles.cardGroup}>
+        <View
+          ref={cardRef}
+          style={[styles.card, ready ? { width: cardW, height: cardH } : null]}
+          collapsable={false}
+        >
+          <Image source={{ uri: card.imageUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
 
-        {/* User photo overlay */}
-        {user.primaryPhotoUrl != null && ready && card.supportsPersonalization && ps != null && (
-          <Image
-            source={{ uri: user.primaryPhotoUrl }}
-            style={[
-              styles.absolute,
-              {
-                top: ps.top * scale,
-                left: ps.left * scale,
-                width: ps.width * scale,
-                height: ps.height * scale,
-                borderRadius: ps.borderRadius * scale,
-              },
-            ]}
-            resizeMode="cover"
-          />
-        )}
+          {user.primaryPhotoUrl != null && ready && card.supportsPersonalization && ps != null && (
+            <Image
+              source={{ uri: user.primaryPhotoUrl }}
+              style={[
+                styles.absolute,
+                {
+                  top: ps.top * scale,
+                  left: ps.left * scale,
+                  width: ps.width * scale,
+                  height: ps.height * scale,
+                  borderRadius: (Math.min(ps.width, ps.height) * scale) / 2,
+                },
+              ]}
+              resizeMode="cover"
+            />
+          )}
 
-        {/* User name overlay */}
-        {ready && card.supportsPersonalization && ns != null && (
-          <Text
-            style={[
-              styles.absolute,
-              styles.nameText,
-              {
-                top: ns.top !== undefined ? ns.top * scale : undefined,
-                bottom: ns.bottom !== undefined ? ns.bottom * scale : undefined,
-                left: ns.left !== undefined ? ns.left * scale : undefined,
-                right: ns.right !== undefined ? ns.right * scale : undefined,
-                fontSize: ns.fontSize * scale,
-                color: ns.color,
-                fontWeight: ns.fontWeight ?? '600',
-              },
-            ]}
-            numberOfLines={1}
-          >
-            {user.name}
-          </Text>
-        )}
+          {ready && card.supportsPersonalization && ns != null && (
+            <Text
+              style={[
+                styles.absolute,
+                styles.nameText,
+                {
+                  top: ns.top !== undefined ? ns.top * scale : undefined,
+                  bottom: ns.bottom !== undefined ? ns.bottom * scale : undefined,
+                  left: ns.left !== undefined ? ns.left * scale : undefined,
+                  right: ns.right !== undefined ? ns.right * scale : undefined,
+                  fontSize: ns.fontSize * scale,
+                  color: ns.color,
+                  fontWeight: ns.fontWeight ?? '600',
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {user.name}
+            </Text>
+          )}
 
-        {/* Watermark for free users */}
-        {showWatermark && (
-          <View style={styles.watermark} pointerEvents="none">
-            <Text style={styles.watermarkText}>Made with Zingo</Text>
+          {showWatermark && (
+            <View style={styles.watermark} pointerEvents="none">
+              <Text style={styles.watermarkText}>Made with Zingo</Text>
+            </View>
+          )}
+        </View>
+
+        {ready && showStrip && (
+          <View style={[styles.nameStrip, { width: cardW, backgroundColor: stripBg }]}>
+            <Text style={[styles.nameStripText, { color: stripTextDark ? '#1c1c19' : '#ffffff' }]} numberOfLines={1}>
+              {user.name}
+            </Text>
           </View>
         )}
       </View>
@@ -136,8 +153,6 @@ export default function QuoteCard({ card, user, cardRef, showWatermark }: QuoteC
 }
 
 const styles = StyleSheet.create({
-  // Full feed slot. Provides the rounded card surface + blank bands around the
-  // centered image; `overflow: hidden` clips the inner card to rounded corners.
   area: {
     width: '100%',
     height: '100%',
@@ -147,9 +162,24 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#f0ede9',
   },
+  cardGroup: {
+    alignItems: 'center',
+  },
   card: {
     overflow: 'hidden',
     backgroundColor: '#f0ede9',
+  },
+  nameStrip: {
+    height: STRIP_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nameStripText: {
+    fontFamily: 'DancingScript_700Bold',
+    fontSize: 26,
+    lineHeight: 52,
+    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   absolute: {
     position: 'absolute',

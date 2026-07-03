@@ -1,0 +1,1 @@
+ALTER TABLE cards ALTER COLUMN name_slot DROP NOT NULL;
