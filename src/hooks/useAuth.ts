@@ -36,6 +36,29 @@ export function useAuth() {
     if (error) throw error;
   };
 
+  // The native Truecaller flow (which yields the authorization code + PKCE
+  // verifier) runs in WelcomeScreen via the useTruecaller hook; this just
+  // bridges that result into a Supabase session. The Edge Function re-verifies
+  // the code with Truecaller server-side and returns a single-use OTP we
+  // exchange for a real session.
+  const signInWithTruecaller = async (oauth: {
+    authorizationCode: string;
+    codeVerifier: string;
+  }) => {
+    const { data, error } = await supabase.functions.invoke('truecaller-auth', {
+      body: oauth,
+    });
+    if (error) throw error;
+    const { email, token } = (data ?? {}) as { email?: string; token?: string };
+    if (!email || !token) throw new Error('Truecaller sign-in failed');
+    const { error: otpError } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
+    });
+    if (otpError) throw otpError;
+  };
+
   const signOut = async () => {
     // Clear the cached Google account so the next sign-in shows the picker.
     await GoogleSignin.signOut().catch(() => {});
@@ -43,5 +66,5 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  return { signInWithGoogle, signInAsGuest, signOut };
+  return { signInWithGoogle, signInAsGuest, signInWithTruecaller, signOut };
 }

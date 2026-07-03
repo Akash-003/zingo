@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,19 @@ import {
   StyleSheet,
   StatusBar,
   Animated,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import { useTruecaller } from '@ajitpatel28/react-native-truecaller';
 import { useAuth } from '../../hooks/useAuth';
 import { showAlert } from '../../store/alertStore';
+
+const TRUECALLER_CLIENT_ID = Constants.expoConfig?.extra?.TRUECALLER_CLIENT_ID as
+  | string
+  | undefined;
 
 // Sample cards for the auto-cycling preview deck. Gradients use the Zingo
 // brand ramp (amber → orange → rose).
@@ -129,9 +137,73 @@ function QuoteDeck() {
 }
 
 export default function WelcomeScreen() {
-  const { signInWithGoogle, signInAsGuest } = useAuth();
+  const { signInWithGoogle, signInAsGuest, signInWithTruecaller } = useAuth();
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingGuest, setLoadingGuest] = useState(false);
+  const [loadingTruecaller, setLoadingTruecaller] = useState(false);
+  const [truecallerReady, setTruecallerReady] = useState(false);
+
+  const anyLoading = loadingGoogle || loadingGuest || loadingTruecaller;
+
+  // Truecaller is Android-only and needs the app + a configured client id.
+  // On success we get the OAuth code/verifier via the custom success handler
+  // (which suppresses the package's own client-side exchange) and forward them
+  // to our Edge Function. Route the handler through a ref so the hook config
+  // stays referentially stable (it sits in the hook's effect deps).
+  const onTruecallerSuccess = async (data: {
+    authorizationCode: string;
+    codeVerifier: string;
+  }) => {
+    try {
+      await signInWithTruecaller(data);
+      // Success → onAuthStateChange navigates away; keep the spinner until then.
+    } catch {
+      showAlert('Sign in failed', 'Could not sign in with Truecaller. Please try again.');
+      setLoadingTruecaller(false);
+    }
+  };
+  const successRef = useRef(onTruecallerSuccess);
+  successRef.current = onTruecallerSuccess;
+
+  const tcConfig = useMemo(
+    () => ({
+      androidClientId: TRUECALLER_CLIENT_ID ?? '',
+      androidSuccessHandler: (data: { authorizationCode: string; codeVerifier: string }) =>
+        void successRef.current(data),
+    }),
+    [],
+  );
+
+  const {
+    initializeTruecallerSDK,
+    isSdkUsable,
+    openTruecallerForVerification,
+    error: truecallerError,
+  } = useTruecaller(tcConfig);
+
+  // Probe availability once on mount (Android + client id only). Failures
+  // (e.g. Expo Go, Truecaller app absent) degrade silently: the button stays
+  // hidden. Empty deps on purpose — we only want to initialise once.
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !TRUECALLER_CLIENT_ID) return;
+    let cancelled = false;
+    (async () => {
+      await initializeTruecallerSDK();
+      const usable = await isSdkUsable().catch(() => false);
+      if (!cancelled) setTruecallerReady(usable);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // A Truecaller failure/cancel surfaces as an error string. Treat it as a
+  // (likely) cancellation — just drop the spinner, no alert (matches the
+  // Google handler swallowing the dismissed picker).
+  useEffect(() => {
+    if (truecallerError) setLoadingTruecaller(false);
+  }, [truecallerError]);
 
   const handleGoogle = async () => {
     try {
@@ -142,6 +214,11 @@ export default function WelcomeScreen() {
     } finally {
       setLoadingGoogle(false);
     }
+  };
+
+  const handleTruecaller = () => {
+    setLoadingTruecaller(true);
+    void openTruecallerForVerification();
   };
 
   const handleGuest = async () => {
@@ -177,7 +254,7 @@ export default function WelcomeScreen() {
           style={styles.googleButton}
           onPress={handleGoogle}
           activeOpacity={0.85}
-          disabled={loadingGoogle || loadingGuest}
+          disabled={anyLoading}
         >
           {loadingGoogle ? (
             <ActivityIndicator size="small" color="#1c1c19" />
@@ -192,26 +269,38 @@ export default function WelcomeScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Guest / Skip */}
-        <LinearGradient
-          colors={['#9d3d2c', '#bd5541']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.gradientWrapper}
-        >
+        {/* Truecaller Sign In — Android only, when the SDK is usable */}
+        {truecallerReady && (
           <TouchableOpacity
-            style={styles.gradientButton}
-            onPress={handleGuest}
+            style={styles.truecallerButton}
+            onPress={handleTruecaller}
             activeOpacity={0.85}
-            disabled={loadingGoogle || loadingGuest}
+            disabled={anyLoading}
           >
-            {loadingGuest ? (
+            {loadingTruecaller ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              <Text style={styles.gradientButtonText}>Browse as Guest</Text>
+              <>
+                <Ionicons name="call" size={16} color="#ffffff" />
+                <Text style={styles.truecallerButtonText}>Continue with Truecaller</Text>
+              </>
             )}
           </TouchableOpacity>
-        </LinearGradient>
+        )}
+
+        {/* Guest — demoted to a plain text link */}
+        <TouchableOpacity
+          style={styles.guestLink}
+          onPress={handleGuest}
+          activeOpacity={0.7}
+          disabled={anyLoading}
+        >
+          {loadingGuest ? (
+            <ActivityIndicator size="small" color="#56423e" />
+          ) : (
+            <Text style={styles.guestLinkText}>Browse as Guest</Text>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Footer */}
@@ -342,24 +431,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1c1c19',
   },
-  gradientWrapper: {
-    borderRadius: 9999,
-    shadowColor: '#9d3d2c',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  gradientButton: {
+  truecallerButton: {
     width: '100%',
     height: 48,
+    backgroundColor: '#0087FF',
+    borderRadius: 9999,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
   },
-  gradientButtonText: {
+  truecallerButtonText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  guestLink: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 4,
+  },
+  guestLinkText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'rgba(86,66,62,0.6)',
+    textDecorationLine: 'underline',
   },
   footer: {
     fontSize: 10,

@@ -50,6 +50,17 @@ export default function ProfileSetupScreen() {
     return () => loop.stop();
   }, [primaryPhotoUrl, pulse]);
 
+  // Prefill the name for providers that supply one — Truecaller stores the
+  // verified name in user_metadata.full_name (set server-side by the
+  // truecaller-auth Edge Function). Only seeds an empty field, so it never
+  // clobbers what the user has typed. Google/guest users have no full_name → noop.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const fullName = data.session?.user?.user_metadata?.full_name as string | undefined;
+      if (fullName) setNameInput((cur) => cur || fullName);
+    });
+  }, []);
+
   // Open the keyboard with the name field focused on arrival. The short delay
   // lets the auth→ProfileSetup navigation transition settle — the bare
   // autoFocus prop is unreliable right after a transition.

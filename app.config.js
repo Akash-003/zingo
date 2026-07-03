@@ -38,6 +38,15 @@ export default {
       // iosUrlScheme option here.
       '@react-native-google-signin/google-signin',
       [
+        // Native Truecaller OAuth (Android only). Injects the
+        // com.truecaller.android.sdk.ClientId <meta-data> into AndroidManifest.
+        // The clientId is baked at prebuild — set TRUECALLER_CLIENT_ID in .env
+        // first. Register the build's package name + SHA-1 against this Client
+        // ID in the Truecaller developer console or the consent sheet won't show.
+        '@ajitpatel28/react-native-truecaller',
+        { androidClientId: process.env.TRUECALLER_CLIENT_ID },
+      ],
+      [
         // System splash (incl. the Android 12+ SplashScreen API): the brand
         // mark on cream. The full logo+name+tagline lockup is shown right after
         // launch by the in-app <BrandSplash> overlay (Android 12 only allows a
@@ -66,6 +75,10 @@ export default {
       // Google Web (OAuth) client ID — used as the audience for the native
       // ID token that Supabase verifies. Not the Android client ID.
       GOOGLE_WEB_CLIENT_ID: process.env.GOOGLE_WEB_CLIENT_ID,
+      // Truecaller OAuth SDK 3.0 Android Client ID. Public PKCE client id —
+      // safe in the bundle. The token exchange is re-verified server-side in
+      // the `truecaller-auth` Edge Function (trust boundary).
+      TRUECALLER_CLIENT_ID: process.env.TRUECALLER_CLIENT_ID,
       // Public Razorpay key id only. The key SECRET and webhook secret live
       // in Supabase Edge Function secrets — never in the app bundle.
       RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
