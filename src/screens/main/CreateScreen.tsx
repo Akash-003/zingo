@@ -19,6 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../../services/supabase';
 import { track } from '../../services/analytics';
 import { useUserStore } from '../../store/userStore';
@@ -61,6 +62,7 @@ export default function CreateScreen() {
   const sparkle = useRef(new Animated.Value(1)).current;
 
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const uid = useUserStore((s) => s.uid);
   const name = useUserStore((s) => s.name);
 
@@ -195,7 +197,10 @@ export default function CreateScreen() {
       setIsPublic(false);
       setPersonalizable(true);
       resetHandles();
-      showAlert('Card Published!', msg);
+      showAlert('Card Published!', msg, [
+        { text: 'View My Cards', onPress: () => navigation.navigate('Collections' as never) },
+        { text: 'OK', style: 'cancel' },
+      ]);
     } catch {
       showAlert('Publish failed', 'Could not publish your card. Please try again.');
     } finally {

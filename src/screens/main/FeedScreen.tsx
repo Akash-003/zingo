@@ -167,6 +167,7 @@ function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
           showWatermark={!isPremium || pendingPlainEvent !== null}
         />
       </View>
+
       <ActionButtons
         onShare={handleShare}
         onDownload={handleDownload}

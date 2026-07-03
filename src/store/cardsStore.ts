@@ -39,6 +39,7 @@ interface CardsState {
   setCurrentCardIndex: (index: number) => void;
   setCards: (cards: Card[]) => void;
   appendCards: (cards: Card[]) => void;
+  removeCard: (id: string) => void;
   reset: () => void;
 }
 
@@ -60,5 +61,6 @@ export const useCardsStore = create<CardsState>((set) => ({
       const ids = new Set(state.cards.map((c) => c.id));
       return { cards: [...state.cards, ...newCards.filter((c) => !ids.has(c.id))] };
     }),
+  removeCard: (id) => set((state) => ({ cards: state.cards.filter((c) => c.id !== id) })),
   reset: () => set(initialState),
 }));

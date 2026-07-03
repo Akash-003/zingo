@@ -215,6 +215,32 @@ export default function ProfileScreen() {
             <Text style={[styles.settingsLabel, styles.signOutLabel]}>Sign Out</Text>
           </TouchableOpacity>
         </View>
+
+        {__DEV__ && (
+          <View style={styles.adminSection}>
+            <TouchableOpacity
+              style={styles.adminLink}
+              onPress={() => navigation.navigate('CardReview' as never)}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.adminLinkText}>Admin: Review Card Name Slots</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.adminLink}
+              onPress={() => navigation.navigate('NameSlotAdjust' as never)}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.adminLinkText}>Admin: Adjust Name Positions</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.adminLink}
+              onPress={() => navigation.navigate('PhotoSlotAdjust' as never)}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.adminLinkText}>Admin: Adjust Photo Positions</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       {/* Edit primary photo modal */}
@@ -374,6 +400,9 @@ const styles = StyleSheet.create({
   signOutIcon: { backgroundColor: '#fdf0f0' },
   settingsLabel: { flex: 1, fontSize: 15, color: '#1c1c19' },
   signOutLabel: { color: '#ba1a1a' },
+  adminSection: { alignItems: 'center', paddingVertical: 12, gap: 4 },
+  adminLink: { alignItems: 'center', paddingVertical: 8 },
+  adminLinkText: { fontSize: 12, color: '#c8b5af' },
 
   // Modal
   modalOverlay: {
