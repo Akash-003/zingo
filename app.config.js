@@ -11,7 +11,7 @@ export default {
     newArchEnabled: true,
     ios: {
       supportsTablet: false,
-      bundleIdentifier: 'com.footprint.quoteflow',
+      bundleIdentifier: 'com.footprint.zingo',
     },
     android: {
       adaptiveIcon: {
@@ -19,7 +19,7 @@ export default {
         backgroundImage: './assets/adaptive-background.png',
         backgroundColor: '#F97316',
       },
-      package: 'com.footprint.quoteflow',
+      package: 'com.footprint.zingo',
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       // Resize the window when the keyboard opens so bottom-anchored actions

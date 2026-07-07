@@ -3,12 +3,13 @@
 > Read this file fully before writing any code. It contains everything you need
 > to understand the project, its architecture, design integration, and coding conventions.
 
-> **Branding note:** The app ships to users as **Zingo** ("Daily status app"). The
-> codebase, repo, Expo `slug`, deep-link `scheme`, and native bundle/package ids are
-> still `quoteflow` / `com.footprint.quoteflow` **on purpose** — they are tied to the
-> EAS project, the Supabase Google-OAuth redirect, and store/app identity, so renaming
-> them would break updates, builds, and sign-in. So: **user-facing strings = "Zingo";
-> internal identifiers = "quoteflow".** See §19 for the full rebrand map.
+> **Branding note:** The app ships to users as **Zingo** ("Daily status app") and the
+> native bundle/package ids are `com.footprint.zingo` (renamed pre-release, before any
+> store upload). The codebase, repo, Expo `slug`, and deep-link `scheme` are still
+> `quoteflow` **on purpose** — they are tied to the EAS project and the Supabase
+> Google-OAuth redirect, so renaming them would break updates, builds, and sign-in.
+> So: **user-facing strings + store ids = "Zingo"; slug/scheme = "quoteflow".**
+> See §19 for the full rebrand map.
 
 ---
 
@@ -35,7 +36,7 @@ Reference app for inspiration: **Crafto** (https://crafto.app)
 | Language           | TypeScript                        | Strict mode. No `any` types.                           |
 | Navigation         | React Navigation v6               | Stack + Bottom Tabs                                    |
 | State Management   | Zustand                           | One store per domain (user, cards, ui)                 |
-| Auth               | Supabase Auth                     | Google Sign-In + Anonymous only (phone deferred)       |
+| Auth               | Supabase Auth                     | Native Google Sign-In + native Truecaller (Android) + Anonymous |
 | Database           | Supabase PostgreSQL               | profiles, cards, analytics_events tables               |
 | File Storage       | Supabase Storage                  | user-photos bucket (profile pics), cards bucket        |
 | Image Compositing  | react-native-view-shot            | Captures card View as image for share/download         |
@@ -99,21 +100,28 @@ QuoteFlow/
 │   └── migrations/            ← SQL migrations; apply with: npx supabase db push
 ├── src/
 │   ├── navigation/
-│   │   ├── RootNavigator.tsx  ← onAuthStateChange → Auth or MainTabs
+│   │   ├── RootNavigator.tsx  ← onAuthStateChange → AuthStack / ProfileSetup / MainTabs
 │   │   ├── AuthStack.tsx      ← Welcome → ProfileSetup
-│   │   └── MainTabs.tsx       ← Bottom tab nav: Feed / Create / Collections / Profile
+│   │   ├── MainTabs.tsx       ← Bottom tab nav: Discover / Create / Collections / Profile(stack)
+│   │   ├── MainStack.tsx      ← Feed / Create / Profile stack (non-tab push nav)
+│   │   └── ProfileStack.tsx   ← ProfileMain → Subscription + 3 admin screens
 │   │
 │   ├── screens/
 │   │   ├── auth/
-│   │   │   ├── WelcomeScreen.tsx       ← Google + Guest login buttons
-│   │   │   ├── PhoneEntryScreen.tsx    ← Exists but not wired (phone auth deferred)
-│   │   │   ├── OTPScreen.tsx           ← Exists but not wired (phone auth deferred)
+│   │   │   ├── WelcomeScreen.tsx       ← Google + Truecaller + Guest login (hosts useTruecaller)
+│   │   │   ├── PhoneEntryScreen.tsx    ← Exists but not wired (legacy OTP flow, unused)
+│   │   │   ├── OTPScreen.tsx           ← Exists but not wired (legacy OTP flow, unused)
 │   │   │   └── ProfileSetupScreen.tsx  ← Name + photo + live card preview
-│   │   └── main/
-│   │       ├── FeedScreen.tsx          ← Category chips + snapping card feed
-│   │       ├── CreateScreen.tsx        ← Upload card image + drag photo/name slots
-│   │       ├── CollectionsScreen.tsx   ← 2-column grid of user-created cards
-│   │       └── ProfileScreen.tsx       ← Identity Vault (up to 5 photos) + settings
+│   │   ├── main/
+│   │   │   ├── FeedScreen.tsx          ← Category chips + snapping card feed (Discover tab)
+│   │   │   ├── CreateScreen.tsx        ← Upload card image + drag photo/name slots
+│   │   │   ├── CollectionsScreen.tsx   ← 2-column grid of user-created cards
+│   │   │   ├── ProfileScreen.tsx       ← Identity Vault (up to 5 photos) + settings + __DEV__ admin links
+│   │   │   └── SubscriptionScreen.tsx  ← Zingo Premium plans + subscribe/cancel
+│   │   └── admin/                      ← __DEV__-only card-personalization tooling (§6)
+│   │       ├── CardReviewScreen.tsx       ← Review seed cards: does this design have a name area?
+│   │       ├── NameSlotAdjustScreen.tsx   ← Drag/tune name_slot for seed cards
+│   │       └── PhotoSlotAdjustScreen.tsx  ← Drag/tune photo_slot for seed cards
 │   │
 │   ├── components/
 │   │   ├── cards/
@@ -128,7 +136,7 @@ QuoteFlow/
 │   │   └── PhotoUploader.tsx           ← Image picker → Remove.bg → Supabase Storage
 │   │
 │   ├── hooks/
-│   │   ├── useAuth.ts                  ← Google OAuth + anonymous via Supabase
+│   │   ├── useAuth.ts                  ← Native Google (ID token) + Truecaller + anonymous via Supabase
 │   │   ├── useUserProfile.ts           ← fetch/update name, photos, primaryPhoto, signOut
 │   │   ├── useCards.ts                 ← Paginated card fetch with useRef loading guard
 │   │   └── useCardCapture.ts           ← react-native-view-shot capture logic
@@ -141,11 +149,20 @@ QuoteFlow/
 │   │   ├── payments.ts                 ← Razorpay subscribe/cancel via Edge Functions
 │   │   └── sharing.ts                  ← expo-sharing (share) + expo-media-library (save)
 │   │
-│   └── store/
-│       ├── userStore.ts                ← uid, name, primaryPhotoUrl, photos[], isPremium
-│       ├── cardsStore.ts               ← currentCategory, cards[], appendCards (ID-deduped)
-│       ├── alertStore.ts               ← global app-alert queue (consumed by AppAlert)
-│       └── uiStore.ts                  ← loading states, modals
+│   ├── store/
+│   │   ├── userStore.ts                ← uid, name, primaryPhotoUrl, photos[], isPremium
+│   │   ├── cardsStore.ts               ← currentCategory, cards[], appendCards (ID-deduped)
+│   │   ├── alertStore.ts               ← global app-alert queue (consumed by AppAlert)
+│   │   └── uiStore.ts                  ← loading states, modals
+│   │
+│   ├── utils/
+│   │   └── logger.ts                   ← dev-gated console wrapper (logger.log/warn/error). Use instead of console.*
+│   │
+│   └── types/
+│       └── react-native-razorpay.d.ts ← ambient types for the untyped native module
+│
+├── scripts/
+│   └── detect-photo-slots.js          ← one-time: Gemini Vision auto-detects photo_slot for seed cards
 ```
 
 ---
@@ -160,6 +177,8 @@ QuoteFlow/
 | `CollectionsScreen.tsx`  | My Cards             | `/collections`   |
 | `CreateScreen.tsx`       | Create Card          | `/create`        |
 | `ProfileScreen.tsx`      | User Profile         | `/profile`       |
+| `SubscriptionScreen.tsx` | Zingo Premium        | (no Stitch route) |
+| `admin/*` (3 screens)    | Card-slot tooling    | (no Stitch route; `__DEV__` only) |
 
 ---
 
@@ -211,6 +230,22 @@ interface NameSlot {
 }
 ```
 
+### Authoring slots for seed cards (admin tooling)
+
+Seed cards (`created_by IS NULL`) get their `photo_slot` / `name_slot` authored via internal
+tools — all gated behind `__DEV__` and reached from `ProfileScreen`:
+
+1. `scripts/detect-photo-slots.js` — one-time bulk pass: Gemini Vision detects the photo
+   placeholder in each card image and writes `photo_slot`. Run with
+   `node scripts/detect-photo-slots.js [--dry-run]` (needs `GEMINI_API_KEY` + `SUPABASE_SERVICE_KEY`).
+2. `CardReviewScreen` — human confirms whether a card even has a name area
+   (`admin_review_card`); if not, `name_slot` is cleared and `name_slot_reviewed` set.
+3. `NameSlotAdjustScreen` / `PhotoSlotAdjustScreen` — drag-tune the slots on-device,
+   persisted via the `admin_update_name_slot` / `admin_update_photo_slot` RPCs.
+
+All admin RPCs are `SECURITY DEFINER` and only touch seed cards. Slots stay in the 400px
+canvas coordinate system above.
+
 ### Paywall model
 
 All content is free to browse. Premium = watermark-free sharing/downloading.
@@ -245,7 +280,15 @@ cards
                                 buttons). Watermark/paywall still apply.
   photo_slot jsonb nullable   ← PhotoSlot (see above); NULL when not personalizable
   name_slot jsonb nullable    ← NameSlot (see above); NULL when not personalizable
+  name_slot_reviewed boolean default false
+                              ← seed-card admin QA flag; set true once a human confirms
+                                (or clears) the name area via CardReviewScreen
   created_at timestamptz
+
+  -- Admin RPCs (SECURITY DEFINER, seed cards only i.e. created_by IS NULL):
+  --   admin_review_card(card_id, has_name_area)  → sets name_slot_reviewed (clears name_slot if no area)
+  --   admin_update_name_slot(card_id, slot_value)
+  --   admin_update_photo_slot(card_id, slot_value)
 
 analytics_events
   id uuid
@@ -266,19 +309,28 @@ Migrations live in `supabase/migrations/`. Apply with: `npx supabase db push`
 
 ```
 WelcomeScreen
-  ├── "Continue with Google" → Supabase OAuth via expo-web-browser → ProfileSetupScreen
-  └── "Continue as Guest"   → supabase.auth.signInAnonymously()   → ProfileSetupScreen
+  ├── "Continue with Google" → native GoogleSignin → ID token → supabase.auth.signInWithIdToken
+  ├── "Continue with Truecaller" (Android) → useTruecaller (authorizationCode + PKCE verifier)
+  │        → truecaller-auth Edge Function (re-verifies server-side, returns email + single-use
+  │          OTP token) → supabase.auth.verifyOtp({ type: 'email' })
+  └── "Continue as Guest"    → supabase.auth.signInAnonymously()
+                                     ↓ all three land on ↓
+                              ProfileSetupScreen (if no name) → MainTabs
 
-ProfileSetupScreen → MainTabs (Feed)
-
-RootNavigator logic:
-  no session     → AuthStack
+RootNavigator logic (RootNavigator.tsx):
+  no session           → AuthStack
   session, no name set → ProfileSetupScreen (inline, not in stack)
-  session + name → MainTabs
+  session + name       → MainTabs
 ```
 
-**Phone auth is deferred.** `PhoneEntryScreen` and `OTPScreen` exist but are not wired
-into navigation. Do not wire them without first enabling Supabase Phone Auth in the dashboard.
+**Native auth (no more web OAuth).** Google uses `@react-native-google-signin/google-signin`
+(configured with `GOOGLE_WEB_CLIENT_ID` — the *web* client id is the ID-token audience Supabase
+verifies; the Android client id just authorizes the SHA-1). Truecaller uses
+`@ajitpatel28/react-native-truecaller` — Android-only, needs the Truecaller app + `TRUECALLER_CLIENT_ID`
+(baked at prebuild). Both are native modules → **require an EAS dev build** (not Expo Go).
+
+`PhoneEntryScreen` / `OTPScreen` are legacy leftovers, not wired into navigation. Phone-style
+auth is now provided by Truecaller, so don't revive them.
 
 On sign-in, `RootNavigator` also calls `registerForPushNotifications(uid)` — non-blocking.
 
@@ -343,7 +395,7 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
 | Phase | Description               | Status      |
 |-------|---------------------------|-------------|
 | 1     | Foundation                | ✅ Complete |
-| 2     | Auth Screens              | ✅ Complete (Google + Anonymous; phone deferred) |
+| 2     | Auth Screens              | ✅ Complete (native Google + Truecaller + Anonymous) |
 | 3     | Core Feature (Feed/Cards) | ✅ Complete |
 | 4     | Supporting Screens        | ✅ Complete (Create, Profile, Collections) |
 | 5     | Monetization & Polish     | 🔄 In progress |
@@ -360,7 +412,8 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
     `20250615000001_subscriptions.sql`.
   - Client: `src/services/payments.ts` + `src/components/PaywallModal.tsx`.
   - Server (secret-holding): Supabase Edge Functions `create-subscription`,
-    `verify-payment`, `razorpay-webhook`. Set secrets with
+    `verify-payment`, `cancel-subscription`, `razorpay-webhook` (plus
+    `truecaller-auth` for native Truecaller sign-in — see §8). Set secrets with
     `supabase secrets set RAZORPAY_KEY_ID=... RAZORPAY_KEY_SECRET=... RAZORPAY_WEBHOOK_SECRET=...`.
     Deploy the webhook with `--no-verify-jwt`.
   - `is_premium`/`premium_expiry` are flipped **server-side only**; the app
@@ -439,7 +492,12 @@ All installed — `npm install` is all you need. Listed here so intent is clear.
 | `expo-notifications` | Push notification token + local notifications |
 | `expo-splash-screen` | Native system splash (config plugin) + preventAutoHideAsync/hideAsync control (§19) |
 | `react-native-razorpay` | Native Razorpay checkout (needs an EAS dev build — not Expo Go) |
-| `expo-web-browser` | OAuth redirect handling for Google Sign-In |
+| `@react-native-google-signin/google-signin` | Native Google Sign-In → ID token for Supabase (EAS dev build) |
+| `@ajitpatel28/react-native-truecaller` | Native Truecaller OAuth, Android only (EAS dev build) |
+| `react-native-image-colors` | Extracts dominant colors from card images (e.g. name-slot contrast) |
+| `@expo-google-fonts/dancing-script` + `expo-font` | Script/display font loading |
+| `expo-system-ui` | System UI (nav/status bar) background color |
+| `expo-web-browser` | OAuth redirect handling (legacy; native sign-in preferred) |
 | `expo-linking` | Deep link / redirect URL construction |
 | `expo-file-system` | File reads for binary upload to Supabase Storage |
 | `expo-linear-gradient` | Gradient backgrounds in UI |
@@ -490,10 +548,23 @@ Store all secrets in `.env` (never commit). Accessed in code via
 SUPABASE_URL=           ← Supabase dashboard → Project Settings → API → Project URL
 SUPABASE_ANON_KEY=      ← Supabase dashboard → Project Settings → API → anon/public key
 REMOVE_BG_API_KEY=      ← https://www.remove.bg/dashboard#api-key (free tier = 50/month)
+GOOGLE_WEB_CLIENT_ID=   ← Google Cloud OAuth *web* client id (ID-token audience for Supabase)
+TRUECALLER_CLIENT_ID=   ← Truecaller developer console app id (Android; baked at prebuild)
+RAZORPAY_KEY_ID=        ← Razorpay dashboard → public key id (secret keys live server-side only)
 EAS_PROJECT_ID=         ← run `eas init` in the project root; it writes this automatically
-REVENUECAT_API_KEY_IOS=      ← Phase 5, not yet wired
-REVENUECAT_API_KEY_ANDROID=  ← Phase 5, not yet wired
 ```
+
+RevenueCat was dropped in favor of Razorpay Subscriptions (see §11) — no RevenueCat keys.
+
+**Script-only (not in `extra`, used by `scripts/detect-photo-slots.js`):**
+```
+GEMINI_API_KEY=         ← https://aistudio.google.com/app/apikey (Gemini Vision, free tier)
+SUPABASE_SERVICE_KEY=   ← Supabase service_role key — server/admin scripts only, NEVER ship in the app
+```
+
+**Edge Function secrets** (set with `supabase secrets set …`, never in the bundle):
+`RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, and the Truecaller server credentials used by
+the `truecaller-auth` function.
 
 A `.env.example` is checked into the repo — copy it to `.env` and fill in values.
 
@@ -550,7 +621,7 @@ in-app `<BrandSplash>` overlay (§19) instead of the native splash, which gets o
 rounded Z mark (`assets/splash-mark.png`).
 
 **Splash is compiled into the native binary** — JS-only reloads won't show splash changes.
-To verify: `adb uninstall com.footprint.quoteflow` then `npx expo run:android`.
+To verify: `adb uninstall com.footprint.zingo` then `npx expo run:android`.
 
 ---
 
@@ -565,9 +636,12 @@ To verify: `adb uninstall com.footprint.quoteflow` then `npx expo run:android`.
 - ❌ Don't use `npm install` for Expo packages — always `npx expo install`
 - ❌ Don't change DB slot values to match screen widths — apply scale in `QuoteCard` instead
 - ❌ Don't `await` analytics calls in UI handlers — use `void track(...)`
-- ❌ Don't wire phone auth without enabling it in Supabase dashboard first
-- ❌ Don't rename `slug` / `scheme` / `bundleIdentifier` / `package` to "zingo" — they
-  must stay `quoteflow` / `com.footprint.quoteflow` (breaks EAS, OAuth, store identity)
+- ❌ Don't call `console.*` directly — use `logger` from `src/utils/logger.ts` (dev-gated)
+- ❌ Don't revive `PhoneEntryScreen` / `OTPScreen` — phone auth is handled by Truecaller (§8)
+- ❌ Don't ship `SUPABASE_SERVICE_KEY` in the app — it's for admin scripts only
+- ❌ Don't rename `slug` / `scheme` to "zingo" — they must stay `quoteflow` (breaks EAS
+  project linkage and the Supabase OAuth redirect). `bundleIdentifier` / `package` are
+  already `com.footprint.zingo` — don't change them again post-release (store identity)
 - ❌ Don't use the legacy `splash` config key — configure splash via the
   `expo-splash-screen` plugin (§19), then `prebuild --clean`
 
@@ -578,12 +652,12 @@ To verify: `adb uninstall com.footprint.quoteflow` then `npx expo run:android`.
 ### Identity split — user-facing vs internal
 The app is branded **Zingo** to users but keeps `quoteflow` internal identifiers.
 
-| Stays `quoteflow` (do NOT change) | Why |
-|-----------------------------------|-----|
-| Expo `slug: 'quoteflow'`          | Tied to the EAS project; renaming detaches updates/builds |
-| `scheme: 'quoteflow'`             | Supabase Google-OAuth redirect uses it; changing breaks sign-in |
-| `ios.bundleIdentifier` / `android.package` = `com.footprint.quoteflow` | Store + OAuth identity |
-| `package.json` `name`             | Internal only |
+| Identifier | Value | Why |
+|------------|-------|-----|
+| Expo `slug` | `quoteflow` (do NOT change) | Tied to the EAS project; renaming detaches updates/builds |
+| `scheme` | `quoteflow` (do NOT change) | Supabase Google-OAuth redirect uses it; changing breaks sign-in |
+| `ios.bundleIdentifier` / `android.package` | `com.footprint.zingo` (renamed pre-release 2026-07; do NOT change post-release) | Store + OAuth identity; Google OAuth Android client must be registered against this package + SHA-1 |
+| `package.json` `name` | `quoteflow` | Internal only |
 
 ### User-facing "Zingo" strings (the rebrand map)
 | Location | Value |
