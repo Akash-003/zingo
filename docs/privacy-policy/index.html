@@ -10,19 +10,10 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #1c1c19;
       background: #fcf9f4;
-      line-height: 1.7;
+      line-height: 1.75;
       padding: 0 16px;
     }
-    .container { max-width: 720px; margin: 0 auto; padding: 48px 0 80px; }
-    h1 { font-size: 2rem; font-weight: 800; color: #9d3d2c; margin-bottom: 4px; }
-    .updated { font-size: 0.85rem; color: #89726d; margin-bottom: 40px; }
-    h2 { font-size: 1.15rem; font-weight: 700; margin: 32px 0 10px; color: #1c1c19; }
-    p  { margin-bottom: 12px; color: #3a3530; }
-    ul { padding-left: 20px; margin-bottom: 12px; color: #3a3530; }
-    li { margin-bottom: 6px; }
-    a  { color: #9d3d2c; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .divider { border: none; border-top: 1px solid #ebe8e3; margin: 40px 0; }
+    .container { max-width: 760px; margin: 0 auto; padding: 48px 0 80px; }
     .badge {
       display: inline-block;
       background: #f97316;
@@ -34,108 +25,195 @@
       border-radius: 99px;
       margin-bottom: 16px;
     }
+    h1 { font-size: 2rem; font-weight: 800; color: #9d3d2c; margin-bottom: 6px; }
+    .updated { font-size: 0.85rem; color: #89726d; margin-bottom: 40px; }
+    h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 36px 0 10px;
+      color: #1c1c19;
+      border-left: 3px solid #f97316;
+      padding-left: 10px;
+    }
+    h3 { font-size: 0.95rem; font-weight: 700; margin: 20px 0 8px; color: #3a3530; }
+    p  { margin-bottom: 12px; color: #3a3530; }
+    ul { padding-left: 20px; margin-bottom: 14px; color: #3a3530; }
+    li { margin-bottom: 7px; }
+    a  { color: #9d3d2c; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .divider { border: none; border-top: 1px solid #ebe8e3; margin: 36px 0; }
+    .contact-box {
+      background: #fff;
+      border: 1px solid #ebe8e3;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-top: 12px;
+    }
+    .contact-box p { margin-bottom: 4px; }
+    .note {
+      background: #fff8f0;
+      border-left: 3px solid #f97316;
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 0.9rem;
+      color: #56423e;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <span class="badge">Zingo</span>
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: July 7, 2026</p>
+    <p class="updated">Last updated: July 8, 2026</p>
 
-    <p>Zingo ("we", "our", or "us") is a mobile application that lets you personalize and share quote cards with your photo and name. This Privacy Policy explains what information we collect, how we use it, and your rights regarding your data.</p>
-    <p>By using Zingo, you agree to the collection and use of information as described in this policy.</p>
+    <p>This Privacy Policy ("Policy") describes how <strong>Digital Footprints</strong> ("Zingo", "we", "our", or "us") collects, uses, stores, processes, and discloses personal data of users who access or interact with the Zingo platform, including our mobile application.</p>
+    <p>This Policy is issued in compliance with the Information Technology Act, 2000, and other related and applicable rules and regulations. By using our Platform, you consent to the collection and use of your information in accordance with this Policy.</p>
 
     <hr class="divider" />
 
     <h2>1. Information We Collect</h2>
 
-    <h2>1a. Information You Provide</h2>
+    <h3>1.1 Information You Provide</h3>
     <ul>
-      <li><strong>Display name:</strong> The name you enter during onboarding, shown on cards you create.</li>
-      <li><strong>Profile photos:</strong> Photos you upload to personalize your cards. Up to 5 photos can be stored in your Identity Vault.</li>
-      <li><strong>Google account:</strong> If you sign in with Google, we receive your name and email address from Google.</li>
+      <li><strong>Display name:</strong> The name you enter during onboarding, shown on cards you create and share.</li>
+      <li><strong>Profile photos:</strong> Photos you upload to personalise your quote cards. Up to 5 photos can be stored in your Identity Vault.</li>
+      <li><strong>Google account details:</strong> If you sign in with Google, we receive your name and email address from Google OAuth.</li>
+      <li><strong>Content you create:</strong> Quote cards you publish to the community (if marked public).</li>
     </ul>
 
-    <h2>1b. Information Collected Automatically</h2>
+    <h3>1.2 Information Collected Automatically</h3>
     <ul>
-      <li><strong>Usage analytics:</strong> Actions such as viewing cards, sharing, downloading, and changing photos. We record these events to understand how the app is used. No personally identifiable information is attached beyond your anonymous user ID.</li>
-      <li><strong>Push notification token:</strong> If you grant notification permission, we store an Expo push token to send you updates.</li>
-      <li><strong>Device information:</strong> Standard device identifiers and OS version, collected automatically by the platform.</li>
+      <li><strong>Usage analytics:</strong> In-app actions such as viewing cards, sharing, downloading, changing photos, and selecting categories. These are recorded with an anonymous user ID — not your name or email.</li>
+      <li><strong>Push notification token:</strong> If you grant notification permission, we store an Expo push token to deliver updates to your device.</li>
+      <li><strong>Device information:</strong> Device type, operating system version, and app crash/diagnostic reports.</li>
+      <li><strong>IP address and general location:</strong> Collected automatically for fraud prevention and security purposes.</li>
     </ul>
 
-    <h2>1c. Guest (Anonymous) Users</h2>
-    <p>You may use Zingo without signing in. In this case, we assign you a random anonymous ID. No name or email is associated with your session unless you later sign in with Google.</p>
+    <h3>1.3 Guest (Anonymous) Users</h3>
+    <p>You may use Zingo without signing in. In this case, we assign you a random anonymous ID. No name or email is associated with your session unless you choose to sign in with Google.</p>
+
+    <h3>1.4 Payment Information</h3>
+    <p>All payment transactions for Zingo Premium are processed by <strong>Razorpay</strong>, a third-party payment gateway. We do not store your card number, bank details, or any sensitive financial information. Razorpay's handling of payment data is governed by their own privacy policy.</p>
 
     <hr class="divider" />
 
-    <h2>2. How We Use Your Information</h2>
+    <h2>2. Purpose of Collection</h2>
     <ul>
-      <li>To personalize quote cards with your photo and name.</li>
-      <li>To store and sync your profile across devices when you are signed in.</li>
-      <li>To send push notifications (only if you grant permission).</li>
-      <li>To analyze aggregate usage patterns and improve the app.</li>
-      <li>To process subscription payments via Razorpay (for Zingo Premium).</li>
-    </ul>
-    <p>We do not sell your personal information to third parties. We do not use your data for advertising profiling.</p>
-
-    <hr class="divider" />
-
-    <h2>3. Third-Party Services</h2>
-    <p>Zingo uses the following third-party services which have their own privacy policies:</p>
-    <ul>
-      <li><strong>Supabase</strong> — Database, authentication, and file storage. <a href="https://supabase.com/privacy" target="_blank">Privacy Policy</a></li>
-      <li><strong>Google Sign-In</strong> — Optional authentication. <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></li>
-      <li><strong>Remove.bg</strong> — Background removal from profile photos. Images are sent to their API and not stored by them beyond processing. <a href="https://www.remove.bg/privacy" target="_blank">Privacy Policy</a></li>
-      <li><strong>Razorpay</strong> — Payment processing for Zingo Premium subscriptions. We do not store your card or payment details. <a href="https://razorpay.com/privacy/" target="_blank">Privacy Policy</a></li>
-      <li><strong>Expo (Notifications)</strong> — Push notification delivery. <a href="https://expo.dev/privacy" target="_blank">Privacy Policy</a></li>
+      <li>Account creation, login, and authentication via Google Sign-In.</li>
+      <li>Personalising quote cards with your photo and name.</li>
+      <li>Background removal from profile photos via Remove.bg API for compositing.</li>
+      <li>Delivering and syncing your profile and card collections across sessions.</li>
+      <li>Processing Zingo Premium subscription payments.</li>
+      <li>Sending push notifications (only if you grant permission).</li>
+      <li>Technical troubleshooting, performance analytics, and service improvement.</li>
+      <li>Fraud detection, account security, and abuse prevention.</li>
+      <li>Regulatory compliance and audit requirements.</li>
     </ul>
 
     <hr class="divider" />
 
-    <h2>4. Permissions We Request</h2>
+    <h2>3. Legal Basis for Processing</h2>
     <ul>
-      <li><strong>Camera &amp; Photo Library:</strong> To let you select or take a profile photo for card personalization. Photos are only uploaded when you explicitly choose them.</li>
-      <li><strong>Notifications:</strong> To send you daily card suggestions or reminders. You can disable this at any time in your device settings.</li>
-      <li><strong>Media Library (Save to Device):</strong> To save a card image to your camera roll when you tap "Save".</li>
+      <li><strong>Consent:</strong> When you register and provide your name, photo, or Google account details.</li>
+      <li><strong>Contractual necessity:</strong> To deliver subscribed services and features you have requested.</li>
+      <li><strong>Legitimate interest:</strong> For platform performance, security monitoring, and abuse prevention.</li>
+      <li><strong>Legal obligation:</strong> When required by government or regulatory authorities under applicable law.</li>
     </ul>
 
     <hr class="divider" />
 
-    <h2>5. Data Retention</h2>
-    <p>Your data is retained for as long as your account is active. If you delete your account, your profile data, photos, and associated cards are permanently deleted within 30 days.</p>
-
-    <hr class="divider" />
-
-    <h2>6. Children's Privacy</h2>
-    <p>Zingo is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, please contact us and we will delete it promptly.</p>
-
-    <hr class="divider" />
-
-    <h2>7. Your Rights</h2>
-    <p>Depending on your location, you may have the right to:</p>
+    <h2>4. Disclosure of Information</h2>
+    <p>We do not sell your personal information. We may share your data in the following limited circumstances:</p>
     <ul>
-      <li>Access the personal data we hold about you.</li>
-      <li>Request correction of inaccurate data.</li>
-      <li>Request deletion of your account and associated data.</li>
-      <li>Withdraw consent for push notifications at any time via device settings.</li>
+      <li>With third-party service providers under confidentiality agreements, solely to operate the Platform (e.g., Supabase for hosting, Razorpay for payments, Remove.bg for image processing).</li>
+      <li>With government agencies, law enforcement, or regulators upon a lawful request.</li>
+      <li>With successors or acquirers in the event of a merger, acquisition, or sale of assets.</li>
+      <li>To protect the rights, safety, or property of Zingo, our users, or the public.</li>
     </ul>
-    <p>To exercise any of these rights, contact us at the email below.</p>
 
     <hr class="divider" />
 
-    <h2>8. Security</h2>
-    <p>We use industry-standard measures to protect your data, including encrypted connections (HTTPS) and access-controlled storage via Supabase. No method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.</p>
+    <h2>5. Third-Party Services</h2>
+    <p>Zingo integrates the following third-party services, each governed by their own privacy policy:</p>
+    <ul>
+      <li><strong>Supabase</strong> — Database, authentication, and file storage. <a href="https://supabase.com/privacy" target="_blank">Privacy Policy ↗</a></li>
+      <li><strong>Google Sign-In</strong> — Authentication via Google OAuth. <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy ↗</a></li>
+      <li><strong>Remove.bg</strong> — Background removal from profile photos. Images are processed and not retained beyond the API call. <a href="https://www.remove.bg/privacy" target="_blank">Privacy Policy ↗</a></li>
+      <li><strong>Razorpay</strong> — Payment processing for Zingo Premium. We do not store card or bank details. <a href="https://razorpay.com/privacy/" target="_blank">Privacy Policy ↗</a></li>
+      <li><strong>Expo Push Notifications</strong> — Notification delivery infrastructure. <a href="https://expo.dev/privacy" target="_blank">Privacy Policy ↗</a></li>
+    </ul>
+    <p>We are not responsible for the privacy practices of these third-party services and recommend reviewing their policies independently.</p>
 
     <hr class="divider" />
 
-    <h2>9. Changes to This Policy</h2>
-    <p>We may update this Privacy Policy from time to time. We will notify you of significant changes by updating the "Last updated" date at the top of this page. Continued use of the app after changes constitutes your acceptance of the revised policy.</p>
+    <h2>6. Permissions We Request</h2>
+    <ul>
+      <li><strong>Camera &amp; Photo Library:</strong> To let you select or capture a profile photo for card personalisation. Photos are only uploaded when you explicitly choose them.</li>
+      <li><strong>Push Notifications:</strong> To send you daily card suggestions or updates. You can disable this at any time in your device Settings.</li>
+      <li><strong>Media Library (Write):</strong> To save a personalised card image to your camera roll when you tap "Save".</li>
+    </ul>
 
     <hr class="divider" />
 
-    <h2>10. Contact Us</h2>
-    <p>If you have questions or concerns about this Privacy Policy or your data, please contact us at:</p>
-    <p><a href="mailto:akash05singh97@gmail.com">akash05singh97@gmail.com</a></p>
+    <h2>7. Data Storage and Security</h2>
+    <ul>
+      <li>All data is stored in encrypted databases via Supabase with access control protocols.</li>
+      <li>All data transfers use HTTPS encryption.</li>
+      <li>Role-based access controls restrict who within our team can access user data.</li>
+      <li>Profile photos are stored in a private Supabase Storage bucket accessible only to the account owner.</li>
+    </ul>
+    <div class="note">Despite our safeguards, no system is completely secure. We urge you not to share your account access or any sensitive credentials with anyone.</div>
+
+    <hr class="divider" />
+
+    <h2>8. Data Retention and Deletion</h2>
+    <ul>
+      <li>User data is retained only for as long as necessary to provide the service, or as required by applicable law.</li>
+      <li>You may request deletion of your account and data by emailing <a href="mailto:contact@digitalftprints.com">contact@digitalftprints.com</a>.</li>
+      <li>We will process deletion requests within 30 days, subject to any statutory, legal, security, fraud-prevention, or regulatory obligations that may require limited retention of certain information.</li>
+    </ul>
+
+    <hr class="divider" />
+
+    <h2>9. User Rights</h2>
+    <p>Subject to applicable law, you may:</p>
+    <ul>
+      <li>Request access to the personal data we hold about you.</li>
+      <li>Request correction of inaccurate or outdated information.</li>
+      <li>Withdraw consent where processing is based on consent.</li>
+      <li>Object to or restrict processing of your data.</li>
+      <li>Request erasure of your data, subject to legal exemptions.</li>
+      <li>Withdraw notification consent at any time via your device Settings.</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a href="mailto:contact@digitalftprints.com">contact@digitalftprints.com</a> with sufficient identification.</p>
+
+    <hr class="divider" />
+
+    <h2>10. Children / Minors</h2>
+    <p>The Platform is not intended for use by individuals below the age of 13. We do not knowingly collect personal data from children. If we become aware that we have collected personal data from a minor without required parental or guardian consent, we will delete such data and suspend the account promptly.</p>
+
+    <hr class="divider" />
+
+    <h2>11. Updates to This Policy</h2>
+    <p>We may modify this Privacy Policy from time to time. Any material changes will be communicated via in-app notifications or email. The "Last updated" date at the top of this page will always reflect the most recent revision. Continued use of the Platform after changes constitutes your acceptance of the revised Policy.</p>
+
+    <hr class="divider" />
+
+    <h2>12. Grievance Redressal</h2>
+    <p>If you have any grievances, complaints, or concerns regarding this Privacy Policy or the processing of your personal information, please contact us at the details below. We will respond within the timeframe prescribed under applicable law.</p>
+
+    <div class="contact-box">
+      <p><strong>Grievance Officer — Zingo</strong></p>
+      <p>Email: <a href="mailto:contact@digitalftprints.com">contact@digitalftprints.com</a></p>
+      <p>Website: <a href="https://zingo.digitalftprints.com" target="_blank">zingo.digitalftprints.com</a></p>
+    </div>
+
+    <p style="margin-top: 24px;">If you are not satisfied with the resolution provided, you may approach the appropriate authority under applicable law after exhausting the grievance redressal process with us.</p>
+
+    <hr class="divider" />
+
+    <p style="font-size:0.85rem; color:#89726d;">This Privacy Policy must be read in conjunction with Zingo's Terms of Service and other applicable policies published on this website.</p>
   </div>
 </body>
 </html>
