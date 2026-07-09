@@ -98,6 +98,10 @@ QuoteFlow/
 ├── assets/                    ← Zingo brand assets (icon, adaptive layers, splash, notif)
 ├── supabase/
 │   └── migrations/            ← SQL migrations; apply with: npx supabase db push
+├── docs/                      ← GitHub Pages site for zingo.digitalftprints.com (CNAME here).
+│                                Landing page (index.html: launch countdown → auto-swaps to Play
+│                                Store button at zero), privacy-policy/, delete-account/.
+│                                Static HTML, no build — deploy = push to main.
 ├── src/
 │   ├── navigation/
 │   │   ├── RootNavigator.tsx  ← onAuthStateChange → AuthStack / ProfileSetup / MainTabs
@@ -658,6 +662,7 @@ The app is branded **Zingo** to users but keeps `quoteflow` internal identifiers
 | `scheme` | `quoteflow` (do NOT change) | Supabase Google-OAuth redirect uses it; changing breaks sign-in |
 | `ios.bundleIdentifier` / `android.package` | `com.footprint.zingo` (renamed pre-release 2026-07; do NOT change post-release) | Store + OAuth identity; Google OAuth Android client must be registered against this package + SHA-1 |
 | `package.json` `name` | `quoteflow` | Internal only |
+| GitHub repo | renamed to `Akash-003/zingo` (2026-07); local `origin` still uses the old `quoteflow` URL — pushes redirect fine | Update remote URL only if redirects break |
 
 ### User-facing "Zingo" strings (the rebrand map)
 | Location | Value |
