@@ -37,15 +37,22 @@ export default {
       // Android client registered with the build's SHA-1; iOS later needs an
       // iosUrlScheme option here.
       '@react-native-google-signin/google-signin',
-      [
-        // Native Truecaller OAuth (Android only). Injects the
-        // com.truecaller.android.sdk.ClientId <meta-data> into AndroidManifest.
-        // The clientId is baked at prebuild — set TRUECALLER_CLIENT_ID in .env
-        // first. Register the build's package name + SHA-1 against this Client
-        // ID in the Truecaller developer console or the consent sheet won't show.
-        '@ajitpatel28/react-native-truecaller',
-        { androidClientId: process.env.TRUECALLER_CLIENT_ID },
-      ],
+      // Native Truecaller OAuth (Android only). Injects the
+      // com.truecaller.android.sdk.ClientId <meta-data> into AndroidManifest.
+      // The clientId is baked at prebuild — set TRUECALLER_CLIENT_ID in .env
+      // first. Register the build's package name + SHA-1 against this Client
+      // ID in the Truecaller developer console or the consent sheet won't show.
+      // Skipped entirely when the env var is empty: an empty clientId emits a
+      // valueless <meta-data>, which Android <12 rejects at install time
+      // (INSTALL_PARSE_FAILED_MANIFEST_MALFORMED).
+      ...(process.env.TRUECALLER_CLIENT_ID
+        ? [
+            [
+              '@ajitpatel28/react-native-truecaller',
+              { androidClientId: process.env.TRUECALLER_CLIENT_ID },
+            ],
+          ]
+        : []),
       [
         // System splash (incl. the Android 12+ SplashScreen API): the brand
         // mark on cream. The full logo+name+tagline lockup is shown right after
