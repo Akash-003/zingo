@@ -174,7 +174,7 @@
     }
     .hidden { display: none !important; }
 
-    /* ---------- Phone mockup ---------- */
+    /* ---------- Phone mockup (mirrors the app's Discover feed) ---------- */
     .hero-visual { display: flex; justify-content: center; }
     .phone {
       width: 272px;
@@ -192,73 +192,135 @@
     .screen {
       width: 100%;
       height: 100%;
-      background: var(--cream);
+      background: #fff;
       border-radius: 34px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      padding: 18px 14px;
     }
+    .statusbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px 2px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .sb-icons { display: flex; align-items: center; gap: 4px; }
+    .sb-icons i {
+      display: block;
+      width: 10px; height: 7px;
+      background: var(--ink);
+      border-radius: 1.5px;
+      opacity: 0.85;
+    }
+    .sb-icons i:first-child { clip-path: polygon(0 100%, 100% 0, 100% 100%); }
+    .sb-icons i:last-child { width: 16px; border-radius: 3px; }
     .screen-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      padding: 6px 14px 8px;
     }
     .screen-logo {
       font-family: 'Baloo 2', cursive;
       font-weight: 800;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       background: var(--grad);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
     .screen-dot {
-      width: 26px; height: 26px;
+      width: 24px; height: 24px;
       border-radius: 50%;
       background: var(--grad);
     }
-    .card-stack {
-      position: relative;
-      flex: 1;
-      border-radius: 22px;
+
+    /* Category chips — active pill follows the feed, like a tap driving a scroll */
+    .chips {
+      overflow: hidden;
+      padding: 2px 0 8px 14px;
+      flex: none;
     }
-    .qcard {
-      position: absolute;
-      inset: 0;
-      border-radius: 22px;
-      padding: 18px;
+    .chips-track {
+      display: flex;
+      gap: 6px;
+      width: max-content;
+      animation: chipsScroll 12s infinite;
+    }
+    .chip {
+      font-size: 0.58rem;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 99px;
+      border: 1px solid #eee5da;
+      background: #fff;
+      color: #56423e;
+      white-space: nowrap;
+    }
+    .chip--gm   { animation: chipGM 12s infinite; }
+    .chip--mot  { animation: chipMot 12s infinite; }
+    .chip--love { animation: chipLove 12s infinite; }
+    @keyframes chipsScroll {
+      0%, 28%  { transform: translateX(0); }
+      30%, 61% { transform: translateX(-42px); }
+      63%, 94% { transform: translateX(-88px); }
+      97%, 100%{ transform: translateX(0); }
+    }
+    @keyframes chipGM {
+      0%, 28%  { background: #9d3d2c; border-color: #9d3d2c; color: #fff; }
+      30%, 95% { background: #fff; border-color: #eee5da; color: #56423e; }
+      97%, 100%{ background: #9d3d2c; border-color: #9d3d2c; color: #fff; }
+    }
+    @keyframes chipMot {
+      0%, 28%  { background: #fff; border-color: #eee5da; color: #56423e; }
+      30%, 61% { background: #9d3d2c; border-color: #9d3d2c; color: #fff; }
+      63%, 100%{ background: #fff; border-color: #eee5da; color: #56423e; }
+    }
+    @keyframes chipLove {
+      0%, 61%  { background: #fff; border-color: #eee5da; color: #56423e; }
+      63%, 94% { background: #9d3d2c; border-color: #9d3d2c; color: #fff; }
+      96%, 100%{ background: #fff; border-color: #eee5da; color: #56423e; }
+    }
+
+    /* Snapping card feed — swipes up card by card; 4th card clones the 1st for a seamless loop */
+    .feed-viewport {
+      flex: 1;
+      overflow: hidden;
+      margin: 0 14px;
+      border-radius: 18px;
+    }
+    .feed-track {
+      height: 400%;
+      display: flex;
+      flex-direction: column;
+      animation: feedSwipe 12s cubic-bezier(0.45, 0, 0.15, 1) infinite;
+    }
+    @keyframes feedSwipe {
+      0%, 30%  { transform: translateY(0); }
+      36%, 63% { transform: translateY(-25%); }
+      69%, 96% { transform: translateY(-50%); }
+      100%     { transform: translateY(-75%); }
+    }
+    .qcard { height: 25%; padding: 2px 0; }
+    .qc {
+      height: 100%;
+      border-radius: 18px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       color: #fff;
-      opacity: 0;
-      animation: cycle 12s infinite;
+      position: relative;
     }
-    .qcard:nth-child(1) { animation-delay: 0s;  background: linear-gradient(160deg, #fbbf24, #f97316 70%); }
-    .qcard:nth-child(2) { animation-delay: 4s;  background: linear-gradient(160deg, #f97316, #e11d48 75%); }
-    .qcard:nth-child(3) { animation-delay: 8s;  background: linear-gradient(160deg, #e11d48, #881337 80%); }
-    @keyframes cycle {
-      0%      { opacity: 0; transform: scale(0.97); }
-      4%, 30% { opacity: 1; transform: scale(1); }
-      36%     { opacity: 0; transform: scale(0.97); }
-      100%    { opacity: 0; }
-    }
-    .qcard-chip {
-      align-self: flex-start;
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      background: rgba(255, 255, 255, 0.22);
-      padding: 4px 12px;
-      border-radius: 99px;
-      backdrop-filter: blur(4px);
-    }
+    .qcard:nth-child(1) .qc, .qcard:nth-child(4) .qc { background: linear-gradient(160deg, #fbbf24, #f97316 70%); }
+    .qcard:nth-child(2) .qc { background: linear-gradient(160deg, #f97316, #e11d48 75%); }
+    .qcard:nth-child(3) .qc { background: linear-gradient(160deg, #e11d48, #881337 80%); }
     .qcard-quote {
       font-family: 'Baloo 2', cursive;
       font-weight: 700;
-      font-size: 1.22rem;
+      font-size: 1.05rem;
       line-height: 1.35;
       margin: auto 0;
       text-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
@@ -268,6 +330,57 @@
       align-items: center;
       gap: 10px;
     }
+    .qcard-mark {
+      position: absolute;
+      right: 12px; bottom: 10px;
+      font-size: 0.5rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    /* Share / Save / Photo / Name action row */
+    .actions {
+      display: flex;
+      gap: 6px;
+      padding: 10px 14px;
+      flex: none;
+    }
+    .act {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 32px;
+      border-radius: 10px;
+      font-size: 0.6rem;
+      font-weight: 700;
+    }
+    .act svg { flex: none; }
+    .act--share { flex: 2; background: #9d3d2c; color: #fff; }
+    .act--save  { flex: 2; background: #f5ebe8; border: 1px solid #9d3d2c; color: #9d3d2c; }
+    .act--sq    { flex: 1; background: #f6f3ee; color: #56423e; }
+
+    /* Bottom tab bar */
+    .tabbar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 10px 14px;
+      border-top: 1px solid #f0ede9;
+      flex: none;
+    }
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 0.52rem;
+      font-weight: 600;
+      color: #b3a89f;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    .tab--active { background: #9d3d2c; color: #fff; }
     .avatar {
       width: 42px; height: 42px;
       border-radius: 50%;
@@ -383,9 +496,9 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .wordmark, .phone { animation: none; }
-      .qcard { animation: none; }
-      .qcard:nth-child(1) { opacity: 1; }
+      .wordmark, .phone, .feed-track, .chips-track,
+      .chip--gm, .chip--mot, .chip--love { animation: none; }
+      .chip--gm { background: #9d3d2c; border-color: #9d3d2c; color: #fff; }
       .feature { transition: none; opacity: 1; transform: none; }
     }
   </style>
@@ -426,35 +539,93 @@
       <div class="hero-visual">
         <div class="phone" aria-hidden="true">
           <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="sb-icons"><i></i><i></i><i></i></span>
+            </div>
             <div class="screen-top">
               <div class="screen-logo">Zingo</div>
               <div class="screen-dot"></div>
             </div>
-            <div class="card-stack">
-              <div class="qcard">
-                <span class="qcard-chip">Good Morning</span>
-                <p class="qcard-quote">Rise up, start fresh, see the bright opportunity in each new day.</p>
-                <div class="qcard-person">
-                  <div class="avatar"></div>
-                  <div class="qcard-name">Priya<small>shared this</small></div>
-                </div>
+            <div class="chips">
+              <div class="chips-track">
+                <span class="chip">ALL</span>
+                <span class="chip chip--gm">Good Morning</span>
+                <span class="chip chip--mot">Motivational</span>
+                <span class="chip chip--love">Love</span>
+                <span class="chip">Birthday</span>
+                <span class="chip">Festivals</span>
               </div>
-              <div class="qcard">
-                <span class="qcard-chip">Motivational</span>
-                <p class="qcard-quote">Dream big. Start small. Act now.</p>
-                <div class="qcard-person">
-                  <div class="avatar"></div>
-                  <div class="qcard-name">Priya<small>shared this</small></div>
-                </div>
+            </div>
+            <div class="feed-viewport">
+              <div class="feed-track">
+                <div class="qcard"><div class="qc">
+                  <p class="qcard-quote">Rise up, start fresh, see the bright opportunity in each new day.</p>
+                  <div class="qcard-person">
+                    <div class="avatar"></div>
+                    <div class="qcard-name">Priya<small>shared this</small></div>
+                  </div>
+                  <span class="qcard-mark">Made with Zingo</span>
+                </div></div>
+                <div class="qcard"><div class="qc">
+                  <p class="qcard-quote">Dream big. Start small. Act now.</p>
+                  <div class="qcard-person">
+                    <div class="avatar"></div>
+                    <div class="qcard-name">Priya<small>shared this</small></div>
+                  </div>
+                  <span class="qcard-mark">Made with Zingo</span>
+                </div></div>
+                <div class="qcard"><div class="qc">
+                  <p class="qcard-quote">Wherever you go, my heart follows.</p>
+                  <div class="qcard-person">
+                    <div class="avatar"></div>
+                    <div class="qcard-name">Priya<small>shared this</small></div>
+                  </div>
+                  <span class="qcard-mark">Made with Zingo</span>
+                </div></div>
+                <div class="qcard"><div class="qc">
+                  <p class="qcard-quote">Rise up, start fresh, see the bright opportunity in each new day.</p>
+                  <div class="qcard-person">
+                    <div class="avatar"></div>
+                    <div class="qcard-name">Priya<small>shared this</small></div>
+                  </div>
+                  <span class="qcard-mark">Made with Zingo</span>
+                </div></div>
               </div>
-              <div class="qcard">
-                <span class="qcard-chip">Love</span>
-                <p class="qcard-quote">Wherever you go, my heart follows.</p>
-                <div class="qcard-person">
-                  <div class="avatar"></div>
-                  <div class="qcard-name">Priya<small>shared this</small></div>
-                </div>
-              </div>
+            </div>
+            <div class="actions">
+              <span class="act act--share">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2"/></svg>
+                Share
+              </span>
+              <span class="act act--save">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
+                Save
+              </span>
+              <span class="act act--sq">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+              </span>
+              <span class="act act--sq">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5z"/></svg>
+              </span>
+            </div>
+            <div class="tabbar">
+              <span class="tab tab--active">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/></svg>
+                Discover
+              </span>
+              <span class="tab">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 9v6M9 12h6"/></svg>
+                Create
+              </span>
+              <span class="tab">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>
+                Collections
+              </span>
+              <span class="tab">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
+                Profile
+              </span>
             </div>
           </div>
         </div>
