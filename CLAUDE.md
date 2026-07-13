@@ -45,7 +45,7 @@ Reference app for inspiration: **Crafto** (https://crafto.app)
 | Photo Picker       | expo-image-picker                 | Camera + Gallery access                                |
 | Payments           | Razorpay Subscriptions            | Native SDK + Supabase Edge Functions (secret server-side) |
 | Push Notifications | expo-notifications                | Token stored in profiles.push_token                    |
-| Analytics          | Supabase (analytics_events table) | track() helper in src/services/analytics.ts            |
+| Analytics          | Supabase + Firebase Analytics     | track() dual-writes: analytics_events table (owned raw data) + Firebase/GA4 (dashboards). Android needs google-services.json at prebuild; iOS unwired (needs GoogleService-Info.plist + static frameworks) |
 | Splash Screen      | expo-splash-screen + BrandSplash  | Two-layer: native system splash + in-app lockup (§19)  |
 
 ---
@@ -405,7 +405,10 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
 | 5     | Monetization & Polish     | 🔄 In progress |
 
 **Phase 5 checklist:**
-- ✅ Analytics — `analytics_events` table + `track()` wired into all key actions
+- ✅ Analytics — `analytics_events` table + `track()` wired into all key actions,
+  incl. onboarding funnel (app_open → login_started/completed → profile_completed
+  → home_viewed, joined by a per-install device_id). `track()` also dual-writes
+  every event to Firebase Analytics (= Google Analytics 4, free dashboards/funnels).
 - ✅ Push notifications — `expo-notifications`, token stored in `profiles.push_token`
 - ✅ EAS Build config — `eas.json` with development / preview / production profiles
 - ✅ Custom paywall + Razorpay Subscriptions (replaces RevenueCat). Triggered

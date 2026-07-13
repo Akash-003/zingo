@@ -185,6 +185,10 @@ export default function FeedScreen() {
   const name = useUserStore((s) => s.name);
   const uid = useUserStore((s) => s.uid);
 
+  useEffect(() => {
+    void track(uid, 'home_viewed');
+  }, []);
+
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: Array<{ item: Card }> }) => {
       viewableItems.forEach(({ item }) => {

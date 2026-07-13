@@ -17,6 +17,7 @@ import PhotoUploader from '../../components/PhotoUploader';
 import { supabase } from '../../services/supabase';
 import { useUserStore } from '../../store/userStore';
 import { showAlert } from '../../store/alertStore';
+import { track } from '../../services/analytics';
 
 export default function ProfileSetupScreen() {
   const uid = useUserStore((s) => s.uid);
@@ -103,6 +104,7 @@ export default function ProfileSetupScreen() {
 
       if (error) throw error;
 
+      void track(uid, 'profile_completed', { skipped: skipName });
       if (!skipName && nameToSave.trim()) setName(nameToSave.trim());
       // If skipping, set a placeholder so RootNavigator navigates to MainStack
       if (skipName) setName('Guest');

@@ -20,6 +20,8 @@ export default {
         backgroundColor: '#F97316',
       },
       package: 'com.footprint.zingo',
+      // Firebase Analytics (GA4) — file from Firebase console, not secret.
+      googleServicesFile: './google-services.json',
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       // Resize the window when the keyboard opens so bottom-anchored actions
@@ -32,6 +34,11 @@ export default {
     },
     scheme: 'quoteflow',
     plugins: [
+      // Firebase Analytics (events mirror to Google Analytics 4 automatically).
+      // Android-only for now; iOS needs GoogleService-Info.plist + static
+      // frameworks (expo-build-properties) when an iOS build happens.
+      '@react-native-firebase/app',
+      '@react-native-firebase/analytics',
       'expo-web-browser',
       // Recolors expo-image-picker's Android crop screen (Flip/Rotate/Crop
       // toolbar) — see plugins/withImageCropperColors.js for why.

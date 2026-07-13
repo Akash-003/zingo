@@ -23,6 +23,7 @@ import Constants from 'expo-constants';
 import { useTruecaller } from '@ajitpatel28/react-native-truecaller';
 import { useAuth } from '../../hooks/useAuth';
 import { showAlert } from '../../store/alertStore';
+import { track } from '../../services/analytics';
 
 const TRUECALLER_CLIENT_ID = Constants.expoConfig?.extra?.TRUECALLER_CLIENT_ID as
   | string
@@ -163,6 +164,7 @@ export default function WelcomeScreen() {
   }) => {
     try {
       await signInWithTruecaller(data);
+      void track(null, 'login_completed', { method: 'truecaller' });
       // Success → onAuthStateChange navigates away; keep the spinner until then.
     } catch {
       showAlert('Sign in failed', 'Could not sign in with Truecaller. Please try again.');
@@ -215,7 +217,9 @@ export default function WelcomeScreen() {
   const handleGoogle = async () => {
     try {
       setLoadingGoogle(true);
+      void track(null, 'login_started', { method: 'google' });
       await signInWithGoogle();
+      void track(null, 'login_completed', { method: 'google' });
     } catch {
       showAlert('Sign in failed', 'Could not sign in with Google. Please try again.');
     } finally {
@@ -225,13 +229,16 @@ export default function WelcomeScreen() {
 
   const handleTruecaller = () => {
     setLoadingTruecaller(true);
+    void track(null, 'login_started', { method: 'truecaller' });
     void openTruecallerForVerification();
   };
 
   const handleGuest = async () => {
     try {
       setLoadingGuest(true);
+      void track(null, 'login_started', { method: 'guest' });
       await signInAsGuest();
+      void track(null, 'login_completed', { method: 'guest' });
     } catch {
       showAlert('Sign in failed', 'Could not continue as guest. Please try again.');
     } finally {

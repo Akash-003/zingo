@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { Session } from '@supabase/supabase-js';
+import { getAnalytics, setUserId } from '@react-native-firebase/analytics';
 
 import { supabase } from '../services/supabase';
 import { useUserStore } from '../store/userStore';
@@ -24,6 +25,8 @@ export default function RootNavigator() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, s) => {
         setSession(s);
+        // Align GA4 user-scoped reports with Supabase uid.
+        setUserId(getAnalytics(), s?.user?.id ?? null).catch(() => {});
         if (s?.user) {
           setUid(s.user.id);
           void registerForPushNotifications(s.user.id);

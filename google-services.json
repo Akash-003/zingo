@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "625861882763",
+    "project_id": "zingo-footprint",
+    "storage_bucket": "zingo-footprint.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625861882763:android:a13ac34d8acc8e1e65358e",
+        "android_client_info": {
+          "package_name": "com.footprint.zingo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDD9REcZqDmyXMm3SderRbKTJogiIo43Cc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
