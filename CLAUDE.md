@@ -536,6 +536,9 @@ npx expo install <package-name>
 # Apply Supabase migrations
 npx supabase db push
 
+# Read-only SQL against the linked remote DB (e.g. verify analytics_events — RLS blocks client reads)
+npx supabase db query "select ..." --linked
+
 # Type check
 npx tsc --noEmit
 
@@ -611,6 +614,16 @@ navigation.navigate('Create' as never) // switches to Create tab
 ```typescript
 void track(uid, 'share_card', { card_id: card.id });
 ```
+
+**Android builds require JDK 17.** Android Studio's bundled JBR is JDK 21 and fails
+`react-native-image-colors:compileDebugKotlin` with "Inconsistent JVM-target compatibility
+(17 vs 21)". Set `JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64` before `expo run:android`
+or any Gradle build.
+
+**Verifying Firebase Analytics on-device:** enable with `adb shell setprop
+debug.firebase.analytics.app com.footprint.zingo` (DebugView) plus `adb shell setprop
+log.tag.FA VERBOSE` and `log.tag.FA-SVC VERBOSE`; then `adb logcat -s FA FA-SVC` shows
+every logged event locally. Disable: `adb shell setprop debug.firebase.analytics.app .none.`
 
 **`collapsable={false}` on QuoteCard root View** — Required for `react-native-view-shot`
 to capture the View correctly on Android. Without it, the View may be optimized away.
