@@ -10,6 +10,7 @@ import {
   Animated,
   Platform,
   Dimensions,
+  Linking,
 } from 'react-native';
 
 const { height: SCREEN_H } = Dimensions.get('window');
@@ -312,9 +313,19 @@ export default function WelcomeScreen() {
       {/* Footer */}
       <Text style={styles.footer}>
         By continuing, you agree to our{' '}
-        <Text style={styles.footerLink}>Terms</Text>
+        <Text
+          style={styles.footerLink}
+          onPress={() => Linking.openURL('https://zingo.digitalftprints.com/terms-conditions/')}
+        >
+          Terms
+        </Text>
         {' '}and{' '}
-        <Text style={styles.footerLink}>Privacy</Text>.
+        <Text
+          style={styles.footerLink}
+          onPress={() => Linking.openURL('https://zingo.digitalftprints.com/privacy-policy/')}
+        >
+          Privacy
+        </Text>.
       </Text>
     </SafeAreaView>
   );
