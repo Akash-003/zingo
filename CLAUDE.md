@@ -402,7 +402,15 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
 | 2     | Auth Screens              | ✅ Complete (native Google + Truecaller + Anonymous) |
 | 3     | Core Feature (Feed/Cards) | ✅ Complete |
 | 4     | Supporting Screens        | ✅ Complete (Create, Profile, Collections) |
-| 5     | Monetization & Polish     | 🔄 In progress |
+| 5     | Monetization & Polish     | ✅ Complete (2026-07-14) |
+
+**Pipeline (next up, in priority order):**
+1. **Hindi localization** — `expo-localization` + i18n layer over all user-facing
+   strings, targeting the core Hindi-speaking WhatsApp-status audience.
+2. **Video cards** — video templates where the user's photo animates in at a
+   fixed timestamp. Big lift: view-shot can't capture video, so export needs a
+   real encoding pipeline (likely server-side rendering). Validate demand with
+   post-launch analytics before building.
 
 **Phase 5 checklist:**
 - ✅ Analytics — `analytics_events` table + `track()` wired into all key actions,
@@ -435,7 +443,7 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
   `<BrandSplash>` lockup overlay). See §19.
 - ✅ App icon / splash / notification assets — present in `assets/` and wired in
   `app.config.js`. (Designed brand assets delivered by the user.)
-- ⬜ `EAS_PROJECT_ID` — run `eas init` to generate, then add to `.env`
+- ✅ `EAS_PROJECT_ID` — set in `.env`, read by `app.config.js` (`extra.eas.projectId`)
 
 ---
 
