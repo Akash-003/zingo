@@ -7,12 +7,14 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  BackHandler,
   Keyboard,
   ScrollView,
   StyleSheet,
+  ToastAndroid,
   useWindowDimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import QuoteCard from '../../components/cards/QuoteCard';
@@ -188,6 +190,23 @@ export default function FeedScreen() {
   useEffect(() => {
     void track(uid, 'home_viewed');
   }, []);
+
+  // Double back press to exit — only while Discover (home) is focused.
+  // Other tabs/screens fall through to React Navigation (back returns to
+  // Discover first); open RN <Modal>s consume back natively before this.
+  const lastBackPress = useRef(0);
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        const now = Date.now();
+        if (now - lastBackPress.current < 2000) return false; // second press → exit
+        lastBackPress.current = now;
+        ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+        return true;
+      });
+      return () => sub.remove();
+    }, [])
+  );
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: Array<{ item: Card }> }) => {

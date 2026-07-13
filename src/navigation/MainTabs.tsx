@@ -12,6 +12,7 @@ export default function MainTabs() {
     <Tab.Navigator
       tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
+      backBehavior="firstRoute"
     >
       <Tab.Screen name="Discover" component={FeedScreen} />
       <Tab.Screen name="Create" component={CreateScreen} />

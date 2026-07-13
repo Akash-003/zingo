@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  BackHandler,
   Keyboard,
   StyleSheet,
 } from 'react-native';
@@ -54,6 +55,19 @@ export default function ProfileEditModals() {
       hideSub.remove();
     };
   }, []);
+
+  // Not an RN <Modal>, so Android back doesn't auto-close it — handle it here.
+  // Registered only while a sheet is visible, so it runs before any other
+  // back handling (last-registered wins) and closes the sheet first.
+  useEffect(() => {
+    if (!nameModalVisible && !photoModalVisible) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (nameModalVisible) closeNameModal();
+      else closePhotoModal();
+      return true;
+    });
+    return () => sub.remove();
+  }, [nameModalVisible, photoModalVisible, closeNameModal, closePhotoModal]);
 
   const handleSaveName = async () => {
     const trimmed = editNameValue.trim();
