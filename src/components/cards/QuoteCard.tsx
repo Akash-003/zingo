@@ -86,12 +86,14 @@ export default function QuoteCard({ card, user, cardRef, showWatermark }: QuoteC
         setAreaHeight(e.nativeEvent.layout.height);
       }}
     >
-      {/* cardGroup is centered as a unit — strip sits flush below image, no gap */}
-      <View style={styles.cardGroup}>
+      {/* cardGroup is centered as a unit — strip sits flush below image, no gap.
+          The capture ref lives here (not on the inner `card` View) so that
+          react-native-view-shot's captureRef, which only captures the exact
+          View it's given, includes the name strip too — it's a sibling of
+          `card`, not a descendant. */}
+      <View ref={cardRef} style={styles.cardGroup} collapsable={false}>
         <View
-          ref={cardRef}
           style={[styles.card, ready ? { width: cardW, height: cardH } : null]}
-          collapsable={false}
         >
           <Image source={{ uri: card.imageUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
 

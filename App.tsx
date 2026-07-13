@@ -7,6 +7,7 @@ import { useFonts, DancingScript_700Bold } from '@expo-google-fonts/dancing-scri
 
 import RootNavigator from './src/navigation/RootNavigator';
 import AppAlert from './src/components/AppAlert';
+import ProfileEditModals from './src/components/ProfileEditModals';
 import BrandSplash from './src/components/BrandSplash';
 
 // Keep the native system splash up until <BrandSplash> mounts and takes over,
@@ -26,6 +27,7 @@ export default function App() {
         <RootNavigator />
       </NavigationContainer>
       <AppAlert />
+      <ProfileEditModals />
       {!brandSplashDone && <BrandSplash onFinish={() => setBrandSplashDone(true)} />}
     </SafeAreaProvider>
   );

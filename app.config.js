@@ -33,6 +33,9 @@ export default {
     scheme: 'quoteflow',
     plugins: [
       'expo-web-browser',
+      // Recolors expo-image-picker's Android crop screen (Flip/Rotate/Crop
+      // toolbar) — see plugins/withImageCropperColors.js for why.
+      './plugins/withImageCropperColors',
       // Native Google Sign-In (in-app account picker). Android needs an OAuth
       // Android client registered with the build's SHA-1; iOS later needs an
       // iosUrlScheme option here.

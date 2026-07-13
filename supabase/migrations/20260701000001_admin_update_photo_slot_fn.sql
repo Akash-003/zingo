@@ -4,6 +4,9 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
+  IF (auth.jwt() ->> 'email') != 'akash05singh97@gmail.com' THEN
+    RAISE EXCEPTION 'Admin only';
+  END IF;
   UPDATE cards SET photo_slot = slot_value WHERE id = card_id AND created_by IS NULL;
 END;
 $$;

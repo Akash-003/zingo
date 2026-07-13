@@ -7,11 +7,8 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  Modal,
-  KeyboardAvoidingView,
   Keyboard,
   ScrollView,
-  Platform,
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
@@ -21,7 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import QuoteCard from '../../components/cards/QuoteCard';
 import ActionButtons from '../../components/ActionButtons';
 import CategoryChips, { CATEGORIES } from '../../components/CategoryChips';
-import PhotoUploader from '../../components/PhotoUploader';
 import PaywallModal from '../../components/PaywallModal';
 import { useCards } from '../../hooks/useCards';
 import { useCardCapture } from '../../hooks/useCardCapture';
@@ -31,6 +27,7 @@ import { track } from '../../services/analytics';
 import { useCardsStore, Card } from '../../store/cardsStore';
 import { useUserStore } from '../../store/userStore';
 import { showAlert } from '../../store/alertStore';
+import { useProfileEditStore } from '../../store/profileEditStore';
 
 interface CardItemProps {
   card: Card;
@@ -42,21 +39,14 @@ type CardActionEvent = 'share_card' | 'download_card';
 
 function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
   const [loadingAction, setLoadingAction] = useState<'share' | 'download' | null>(null);
-  const [nameModalVisible, setNameModalVisible] = useState(false);
-  const [photoModalVisible, setPhotoModalVisible] = useState(false);
-  const [editNameValue, setEditNameValue] = useState('');
   const [paywallVisible, setPaywallVisible] = useState(false);
   const [paywallContext, setPaywallContext] = useState<'share' | 'save'>('share');
   const [pendingPlainEvent, setPendingPlainEvent] = useState<CardActionEvent | null>(null);
   const cardRef = useRef<View>(null);
   const { capture } = useCardCapture();
-  const {
-    updateName,
-    addPhoto,
-    setPrimaryPhoto,
-    refreshProfile,
-    loading: profileLoading,
-  } = useUserProfile();
+  const { refreshProfile } = useUserProfile();
+  const openNameModal = useProfileEditStore((s) => s.openNameModal);
+  const openPhotoModal = useProfileEditStore((s) => s.openPhotoModal);
   const uid = useUserStore((s) => s.uid);
   const isPremium = useUserStore((s) => s.isPremium);
   const primaryPhotoUrl = useUserStore((s) => s.primaryPhotoUrl);
@@ -136,25 +126,11 @@ function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
 
   const handleChangePhoto = () => {
     void track(uid, 'change_photo', { card_id: card.id });
-    setPhotoModalVisible(true);
-  };
-
-  const handlePhotoUploaded = async (url: string) => {
-    setPhotoModalVisible(false);
-    await addPhoto(url);
-    await setPrimaryPhoto(url);
+    openPhotoModal();
   };
 
   const handleEditName = () => {
-    setEditNameValue(name);
-    setNameModalVisible(true);
-  };
-
-  const handleSaveName = async () => {
-    const trimmed = editNameValue.trim();
-    if (!trimmed) return;
-    await updateName(trimmed);
-    setNameModalVisible(false);
+    openNameModal();
   };
 
   return (
@@ -176,96 +152,6 @@ function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
         loadingAction={loadingAction}
         showPersonalization={card.supportsPersonalization}
       />
-
-      {/* Edit Name modal */}
-      <Modal
-        visible={nameModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setNameModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalBackdrop}
-        >
-          <TouchableOpacity
-            style={styles.modalDismissArea}
-            activeOpacity={1}
-            onPress={() => setNameModalVisible(false)}
-          />
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Edit Display Name</Text>
-            <Text style={styles.modalSubtitle}>
-              This name appears on every card you share.
-            </Text>
-            <TextInput
-              style={styles.nameInput}
-              value={editNameValue}
-              onChangeText={setEditNameValue}
-              placeholder="Your name"
-              placeholderTextColor="rgba(86,66,62,0.4)"
-              autoFocus
-              returnKeyType="done"
-              onSubmitEditing={handleSaveName}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelBtn}
-                onPress={() => setNameModalVisible(false)}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalSaveBtn, profileLoading && styles.modalBtnDisabled]}
-                onPress={handleSaveName}
-                disabled={profileLoading}
-              >
-                {profileLoading ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.modalSaveText}>Save</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      {/* Change Photo modal */}
-      <Modal
-        visible={photoModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setPhotoModalVisible(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <TouchableOpacity
-            style={styles.modalDismissArea}
-            activeOpacity={1}
-            onPress={() => setPhotoModalVisible(false)}
-          />
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Change Photo</Text>
-            <Text style={styles.modalSubtitle}>
-              Upload a new photo to appear on all your cards.
-            </Text>
-            <View style={styles.uploaderWrap}>
-              <PhotoUploader
-                onPhotoUploaded={handlePhotoUploaded}
-                currentPhotoUrl={primaryPhotoUrl}
-              />
-            </View>
-            <TouchableOpacity
-              style={styles.modalCancelStandalone}
-              onPress={() => setPhotoModalVisible(false)}
-            >
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       {/* Paywall */}
       <PaywallModal
@@ -570,97 +456,5 @@ const styles = StyleSheet.create({
   },
   footerLoader: {
     marginVertical: 24,
-  },
-
-  // Shared modal styles
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalDismissArea: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  modalSheet: {
-    backgroundColor: '#fcf9f4',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    paddingTop: 12,
-  },
-  modalHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#ddd',
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1c1c19',
-    marginBottom: 6,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: '#56423e',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  nameInput: {
-    borderWidth: 1,
-    borderColor: '#e0d8d0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#1c1c19',
-    backgroundColor: '#fff',
-    marginBottom: 16,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  modalCancelBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 99,
-    borderWidth: 1,
-    borderColor: '#89726d',
-    alignItems: 'center',
-  },
-  modalSaveBtn: {
-    flex: 2,
-    paddingVertical: 14,
-    borderRadius: 99,
-    backgroundColor: '#9d3d2c',
-    alignItems: 'center',
-  },
-  modalBtnDisabled: {
-    opacity: 0.6,
-  },
-  modalCancelText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#56423e',
-  },
-  modalSaveText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  uploaderWrap: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalCancelStandalone: {
-    paddingVertical: 14,
-    borderRadius: 99,
-    borderWidth: 1,
-    borderColor: '#89726d',
-    alignItems: 'center',
   },
 });

@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
+import { showAlert } from '../../store/alertStore';
 
 interface NameSlot {
   top?: number;
@@ -67,15 +68,23 @@ export default function CardReviewScreen() {
 
   const markLooksGood = async () => {
     setSaving(true);
-    await supabase.rpc('admin_review_card', { card_id: cards[index].id, has_name_area: true });
+    const { error } = await supabase.rpc('admin_review_card', { card_id: cards[index].id, has_name_area: true });
     setSaving(false);
+    if (error) {
+      showAlert('Could not save', error.message);
+      return;
+    }
     advance();
   };
 
   const markNoArea = async () => {
     setSaving(true);
-    await supabase.rpc('admin_review_card', { card_id: cards[index].id, has_name_area: false });
+    const { error } = await supabase.rpc('admin_review_card', { card_id: cards[index].id, has_name_area: false });
     setSaving(false);
+    if (error) {
+      showAlert('Could not save', error.message);
+      return;
+    }
     advance();
   };
 
