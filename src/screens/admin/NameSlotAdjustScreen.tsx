@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
+import { showAlert } from '../../store/alertStore';
 
 interface NameSlot {
   top?: number;
@@ -118,8 +119,12 @@ export default function NameSlotAdjustScreen() {
     const card = cards[index];
     if (!card || !slot) return;
     setSaving(true);
-    await supabase.rpc('admin_update_name_slot', { card_id: card.id, slot_value: slot });
+    const { error } = await supabase.rpc('admin_update_name_slot', { card_id: card.id, slot_value: slot });
     setSaving(false);
+    if (error) {
+      showAlert('Could not save', error.message);
+      return;
+    }
     setIndex((i) => i + 1);
   };
 
