@@ -678,7 +678,7 @@ The app is branded **Zingo** to users but keeps `quoteflow` internal identifiers
 | `scheme` | `quoteflow` (do NOT change) | Supabase Google-OAuth redirect uses it; changing breaks sign-in |
 | `ios.bundleIdentifier` / `android.package` | `com.footprint.zingo` (renamed pre-release 2026-07; do NOT change post-release) | Store + OAuth identity; Google OAuth Android client must be registered against this package + SHA-1 |
 | `package.json` `name` | `quoteflow` | Internal only |
-| GitHub repo | renamed to `Akash-003/zingo` (2026-07); local `origin` still uses the old `quoteflow` URL — pushes redirect fine | Update remote URL only if redirects break |
+| GitHub repo | `Akash-003/zingo` (renamed 2026-07); local `origin` points at the new URL | — |
 
 ### User-facing "Zingo" strings (the rebrand map)
 | Location | Value |
