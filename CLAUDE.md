@@ -46,6 +46,7 @@ Reference app for inspiration: **Crafto** (https://crafto.app)
 | Payments           | Razorpay Subscriptions            | Native SDK + Supabase Edge Functions (secret server-side) |
 | Push Notifications | expo-notifications                | Token stored in profiles.push_token                    |
 | Analytics          | Supabase + Firebase Analytics     | track() dual-writes: analytics_events table (owned raw data) + Firebase/GA4 (dashboards). Android needs google-services.json at prebuild; iOS unwired (needs GoogleService-Info.plist + static frameworks) |
+| Localization       | Custom i18n (src/i18n) + expo-localization | English + Hindi, in-app switchable, no restart needed (§20) |
 | Splash Screen      | expo-splash-screen + BrandSplash  | Two-layer: native system splash + in-app lockup (§19)  |
 
 ---
@@ -104,7 +105,7 @@ QuoteFlow/
 │                                Static HTML, no build — deploy = push to main.
 ├── src/
 │   ├── navigation/
-│   │   ├── RootNavigator.tsx  ← onAuthStateChange → AuthStack / ProfileSetup / MainTabs
+│   │   ├── RootNavigator.tsx  ← onAuthStateChange → AuthStack / LanguageSelect / ProfileSetup / MainTabs
 │   │   ├── AuthStack.tsx      ← Welcome → ProfileSetup
 │   │   ├── MainTabs.tsx       ← Bottom tab nav: Discover / Create / Collections / Profile(stack)
 │   │   ├── MainStack.tsx      ← Feed / Create / Profile stack (non-tab push nav)
@@ -115,6 +116,8 @@ QuoteFlow/
 │   │   │   ├── WelcomeScreen.tsx       ← Google + Truecaller + Guest login (hosts useTruecaller)
 │   │   │   ├── PhoneEntryScreen.tsx    ← Exists but not wired (legacy OTP flow, unused)
 │   │   │   ├── OTPScreen.tsx           ← Exists but not wired (legacy OTP flow, unused)
+│   │   │   ├── LanguageSelectScreen.tsx ← One-time English/हिन्दी picker, shown once after
+│   │   │   │                              login before ProfileSetupScreen (§20)
 │   │   │   └── ProfileSetupScreen.tsx  ← Name + photo + live card preview
 │   │   ├── main/
 │   │   │   ├── FeedScreen.tsx          ← Category chips + snapping card feed (Discover tab)
@@ -157,7 +160,14 @@ QuoteFlow/
 │   │   ├── userStore.ts                ← uid, name, primaryPhotoUrl, photos[], isPremium
 │   │   ├── cardsStore.ts               ← currentCategory, cards[], appendCards (ID-deduped)
 │   │   ├── alertStore.ts               ← global app-alert queue (consumed by AppAlert)
-│   │   └── uiStore.ts                  ← loading states, modals
+│   │   ├── uiStore.ts                  ← loading states, modals
+│   │   └── languageStore.ts            ← persisted 'en'|'hi' choice (AsyncStorage), device
+│   │                                      locale fallback (§20)
+│   │
+│   ├── i18n/                           ← Custom translation layer (§20)
+│   │   ├── en.ts                       ← source-of-truth English string map
+│   │   ├── hi.ts                       ← Hindi strings, typed Record<keyof typeof en, string>
+│   │   └── index.ts                    ← t(key, params?) + categoryLabel(id) helpers
 │   │
 │   ├── utils/
 │   │   └── logger.ts                   ← dev-gated console wrapper (logger.log/warn/error). Use instead of console.*
@@ -176,6 +186,7 @@ QuoteFlow/
 | Screen File              | Screen Name          | Stitch Route     |
 |--------------------------|----------------------|------------------|
 | `WelcomeScreen.tsx`      | Welcome / Login      | `/welcome`       |
+| `LanguageSelectScreen.tsx` | Language Select    | (no Stitch route; shown once post-login) |
 | `ProfileSetupScreen.tsx` | Profile Setup        | `/profile-setup` |
 | `FeedScreen.tsx`         | Main Feed            | `/feed`          |
 | `CollectionsScreen.tsx`  | My Cards             | `/collections`   |
@@ -319,13 +330,18 @@ WelcomeScreen
   │          OTP token) → supabase.auth.verifyOtp({ type: 'email' })
   └── "Continue as Guest"    → supabase.auth.signInAnonymously()
                                      ↓ all three land on ↓
-                              ProfileSetupScreen (if no name) → MainTabs
+                    LanguageSelectScreen (once) → ProfileSetupScreen (if no name) → MainTabs
 
 RootNavigator logic (RootNavigator.tsx):
-  no session           → AuthStack
-  session, no name set → ProfileSetupScreen (inline, not in stack)
-  session + name       → MainTabs
+  no session                              → AuthStack
+  session, no name set, language not yet picked this launch → LanguageSelectScreen (inline, not in stack)
+  session, no name set, language picked   → ProfileSetupScreen (inline, not in stack)
+  session + name                          → MainTabs
 ```
+
+`languagePicked` is local `useState` in `RootNavigator`, not persisted — it only needs to gate
+the one-time onboarding path (users who already have a `name` skip both screens entirely). The
+actual language *value* is what's persisted, in `languageStore` (§20).
 
 **Native auth (no more web OAuth).** Google uses `@react-native-google-signin/google-signin`
 (configured with `GOOGLE_WEB_CLIENT_ID` — the *web* client id is the ID-token audience Supabase
@@ -403,11 +419,10 @@ Active chip: filled with primary brand color. Inactive: outlined, white fill. Ho
 | 3     | Core Feature (Feed/Cards) | ✅ Complete |
 | 4     | Supporting Screens        | ✅ Complete (Create, Profile, Collections) |
 | 5     | Monetization & Polish     | ✅ Complete (2026-07-14) |
+| 6     | Localization (Hindi)      | ✅ Complete (2026-07-15) — see §20 |
 
 **Pipeline (next up, in priority order):**
-1. **Hindi localization** — `expo-localization` + i18n layer over all user-facing
-   strings, targeting the core Hindi-speaking WhatsApp-status audience.
-2. **Video cards** — video templates where the user's photo animates in at a
+1. **Video cards** — video templates where the user's photo animates in at a
    fixed timestamp. Big lift: view-shot can't capture video, so export needs a
    real encoding pipeline (likely server-side rendering). Validate demand with
    post-launch analytics before building.
@@ -505,6 +520,7 @@ All installed — `npm install` is all you need. Listed here so intent is clear.
 | `expo-sharing` | System share sheet |
 | `expo-media-library` | Save to camera roll |
 | `expo-notifications` | Push notification token + local notifications |
+| `expo-localization` | Device locale detection (`getLocales()`), used as the initial language default (§20) |
 | `expo-splash-screen` | Native system splash (config plugin) + preventAutoHideAsync/hideAsync control (§19) |
 | `react-native-razorpay` | Native Razorpay checkout (needs an EAS dev build — not Expo Go) |
 | `@react-native-google-signin/google-signin` | Native Google Sign-In → ID token for Supabase (EAS dev build) |
@@ -651,6 +667,14 @@ rounded Z mark (`assets/splash-mark.png`).
 **Splash is compiled into the native binary** — JS-only reloads won't show splash changes.
 To verify: `adb uninstall com.footprint.zingo` then `npx expo run:android`.
 
+**Label arrays built from `t()`/`categoryLabel()` must live inside the component body, not
+module scope.** Language can change in-app at runtime (§20) with no restart, so a `const
+STEPS = [{ label: t('create.step1') }, ...]` sitting at module scope would freeze at whatever
+language was active when the JS bundle first evaluated that file — stale forever after a
+language switch. Always build these arrays inside the component function so they're
+recomputed on every render (see `CreateScreen`, `ProfileScreen`, `SubscriptionScreen`,
+`WelcomeScreen`'s `QuoteDeck`, and `CategoryChips`' `useCategories()` hook for the pattern).
+
 ---
 
 ## 18. What NOT to Do
@@ -672,6 +696,10 @@ To verify: `adb uninstall com.footprint.zingo` then `npx expo run:android`.
   already `com.footprint.zingo` — don't change them again post-release (store identity)
 - ❌ Don't use the legacy `splash` config key — configure splash via the
   `expo-splash-screen` plugin (§19), then `prebuild --clean`
+- ❌ Don't build `t()`/`categoryLabel()` label arrays at module scope — compute them
+  inside the component body so an in-app language switch doesn't leave them stale (§17, §20)
+- ❌ Don't translate brand strings ("Zingo", "Zingo Premium", "Made with Zingo") — they
+  stay hardcoded in every language (§20)
 
 ---
 
@@ -744,3 +772,67 @@ asymmetric list padding (`paddingLeft: 16, paddingRight: 28`), signalling there'
 ### Removed: Appearance & Theme
 The "Appearance & Theme" row was removed from `ProfileScreen` SETTINGS (theming is not
 implemented). `SETTINGS` now holds only Notifications and Privacy rows.
+
+---
+
+## 20. Localization (i18n)
+
+Zingo supports **English and Hindi**, targeting the core Hindi-speaking WhatsApp-status
+audience. This is a custom, dependency-light layer — no `i18n-js`, no `react-i18next`.
+
+### Architecture
+
+```
+src/store/languageStore.ts   ← Zustand store: { language: 'en'|'hi', setLanguage }
+                                 Initial value = device locale via expo-localization's
+                                 getLocales() (Hindi device → 'hi', else 'en' fallback).
+                                 setLanguage() persists the explicit choice to AsyncStorage
+                                 ('zingo.language'), which overrides the device-locale guess
+                                 on the next app launch (fire-and-forget hydration).
+
+src/i18n/en.ts                ← source-of-truth English string map (~150 keys)
+src/i18n/hi.ts                ← Hindi translations, typed Record<keyof typeof en, string> —
+                                 a missing or extra key is a compile-time error
+src/i18n/index.ts             ← t(key, params?) and categoryLabel(id) helpers. Both read
+                                 useLanguageStore.getState().language fresh on every call —
+                                 NOT resolved once at launch — so any render (or any newly
+                                 mounted screen) picks up a language change immediately.
+```
+
+`t()` and `categoryLabel()` are plain functions, not hooks — call them anywhere, including
+inside `.map()`/render callbacks. They are **not** reactive by themselves: a component only
+re-renders when *something* re-renders it (new screen mount, prop change, local state change,
+or a component explicitly subscribing to `useLanguageStore` — see below).
+
+### Where the language can be changed
+
+1. **`LanguageSelectScreen`** — shown once, right after login, before `ProfileSetupScreen`
+   (see §8). Bilingual static copy (not `t()`-driven, since no choice exists yet). Tapping a
+   tile calls `setLanguage()` immediately; `RootNavigator`'s local `languagePicked` state then
+   advances to `ProfileSetupScreen`, which mounts fresh already in the chosen language.
+2. **`ProfileScreen` → Settings → Language`** — always available afterwards. Opens a modal
+   (English / हिन्दी with a checkmark on the active one). Since `ProfileScreen` itself calls
+   `t()` during render, picking a language re-renders the *same* screen instantly — no restart,
+   no navigation, no OS-level per-app language setting involved.
+
+### Reactivity gotcha (see also §17)
+
+Because `t()` isn't a hook, any label array built by calling `t()`/`categoryLabel()` **must be
+built inside the component function body**, not at module scope — otherwise it's computed once
+when the JS bundle first evaluates that file and never updates. Existing examples of the
+correct pattern: `CreateScreen`'s `STEPS`, `ProfileScreen`'s `STATS`/`SETTINGS`,
+`SubscriptionScreen`'s `BENEFITS`, `WelcomeScreen`'s `QuoteDeck` `SAMPLES`, and
+`CategoryChips`' `useCategories()` hook (also reused by `FeedScreen` and `CollectionsScreen` so
+there's one canonical category list).
+
+### What stays untranslated
+
+Brand strings — **"Zingo"**, **"Zingo Premium"**, and the `QuoteCard` watermark **"Made with
+Zingo"** — are hardcoded in every language on purpose, per the rebrand rules in §19. User-
+entered content (names, custom card text) is obviously never translated either.
+
+### Adding a new string
+
+Add the key to `src/i18n/en.ts` first; TypeScript will then force a matching entry in
+`src/i18n/hi.ts` (the `Record<keyof typeof en, string>` type on `hi` makes a missing key a
+build error). Call it with `t('your.key')` at render time.
