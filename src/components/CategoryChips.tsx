@@ -9,20 +9,29 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { categoryLabel } from '../i18n';
+import { useLanguageStore } from '../store/languageStore';
 
-export const CATEGORIES = [
-  { id: 'all', label: 'ALL' },
-  { id: 'good-morning', label: 'Good Morning' },
-  { id: 'motivational', label: 'Motivational' },
-  { id: 'love', label: 'Love' },
-  { id: 'birthday', label: 'Birthday' },
-  { id: 'good-night', label: 'Good Night' },
-  { id: 'festivals', label: 'Festivals' },
-  { id: 'shayari', label: 'Shayari' },
-  { id: 'devotional', label: 'Devotional' },
-  { id: 'friendship', label: 'Friendship' },
-  { id: 'life', label: 'Life' },
+const CATEGORY_IDS = [
+  'all',
+  'good-morning',
+  'motivational',
+  'love',
+  'birthday',
+  'good-night',
+  'festivals',
+  'shayari',
+  'devotional',
+  'friendship',
+  'life',
 ];
+
+// Recomputed (not a module-level constant) so it picks up an in-app language
+// change without needing an app restart — see src/store/languageStore.ts.
+export function useCategories() {
+  useLanguageStore((s) => s.language);
+  return CATEGORY_IDS.map((id) => ({ id, label: categoryLabel(id) }));
+}
 
 // Distance (px) scrolled past an edge before its fade affordance appears.
 const EDGE_THRESHOLD = 4;
@@ -33,6 +42,7 @@ interface CategoryChipsProps {
 }
 
 export default function CategoryChips({ selected, onSelect }: CategoryChipsProps) {
+  const categories = useCategories();
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(true);
 
@@ -46,7 +56,7 @@ export default function CategoryChips({ selected, onSelect }: CategoryChipsProps
   return (
     <View style={styles.wrapper}>
       <FlatList
-        data={CATEGORIES}
+        data={categories}
         horizontal
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}

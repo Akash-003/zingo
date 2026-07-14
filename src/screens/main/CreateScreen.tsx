@@ -24,6 +24,7 @@ import { supabase } from '../../services/supabase';
 import { track } from '../../services/analytics';
 import { useUserStore } from '../../store/userStore';
 import { showAlert } from '../../store/alertStore';
+import { t, categoryLabel } from '../../i18n';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PREVIEW_WIDTH = SCREEN_WIDTH - 32;
@@ -37,15 +38,16 @@ const CATEGORIES = [
 
 const NAME_COLORS = ['#ffffff', '#000000', '#FFD700', '#FF5252', '#69F0AE', '#40C4FF', '#FF80AB', '#E0E0E0'];
 
-const STEPS = [
-  { icon: 'image-outline' as const, label: 'Pick a greeting card image' },
-  { icon: 'move-outline' as const, label: 'Position your photo & name on the card' },
-  { icon: 'send-outline' as const, label: 'Set visibility and publish' },
-];
-
 interface SlotPos { x: number; y: number }
 
 export default function CreateScreen() {
+  // Built per render (not module scope) so it reflects an in-app language
+  // change without needing an app restart — see src/store/languageStore.ts.
+  const STEPS = [
+    { icon: 'image-outline' as const, label: t('create.step1') },
+    { icon: 'move-outline' as const, label: t('create.step2') },
+    { icon: 'send-outline' as const, label: t('create.step3') },
+  ];
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [photoPos, setPhotoPos] = useState<SlotPos>({ x: PREVIEW_WIDTH / 2 - 50, y: 80 });
   const [namePos, setNamePos] = useState<SlotPos>({ x: PREVIEW_WIDTH / 2 - 60, y: 300 });
@@ -80,7 +82,7 @@ export default function CreateScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      showAlert('Permission required', 'Please allow photo access.');
+      showAlert(t('common.permissionRequired'), t('create.allowPhotoAccess'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -191,18 +193,18 @@ export default function CreateScreen() {
 
       // Reset to default state and show a brief confirmation
       void track(uid, 'card_published', { category: category ?? undefined, is_premium: false });
-      const msg = isPublic ? 'Your card is live in the community feed.' : 'Your card has been saved privately.';
+      const msg = isPublic ? t('create.publishedPublic') : t('create.publishedPrivate');
       setImageUri(null);
       setCategory(null);
       setIsPublic(false);
       setPersonalizable(true);
       resetHandles();
-      showAlert('Card Published!', msg, [
-        { text: 'View My Cards', onPress: () => navigation.navigate('Collections' as never) },
-        { text: 'OK', style: 'cancel' },
+      showAlert(t('create.publishedTitle'), msg, [
+        { text: t('create.viewMyCards'), onPress: () => navigation.navigate('Collections' as never) },
+        { text: t('common.ok'), style: 'cancel' },
       ]);
     } catch {
-      showAlert('Publish failed', 'Could not publish your card. Please try again.');
+      showAlert(t('create.publishFailedTitle'), t('create.publishFailedBody'));
     } finally {
       setPublishing(false);
     }
@@ -239,7 +241,7 @@ export default function CreateScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.heading}>Create a Card</Text>
+        <Text style={styles.heading}>{t('create.heading')}</Text>
 
         {/* Canvas — shows placeholder when no image, drag canvas when image picked */}
         {imageUri ? (
@@ -270,7 +272,7 @@ export default function CreateScreen() {
                   style={[styles.nameHandle, { left: namePos.x, top: namePos.y }]}
                 >
                   <Text style={{ color: nameColor, fontSize: nameFontSize, fontWeight: nameBold ? 'bold' : 'normal' }}>
-                    {name || 'Your Name'}
+                    {name || t('setup.yourName')}
                   </Text>
                 </View>
               </>
@@ -279,7 +281,7 @@ export default function CreateScreen() {
             {/* Change image overlay */}
             <TouchableOpacity style={styles.changeBtn} onPress={pickImage}>
               <Ionicons name="image-outline" size={14} color="#fff" />
-              <Text style={styles.changeBtnText}>Change</Text>
+              <Text style={styles.changeBtnText}>{t('create.change')}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -289,7 +291,7 @@ export default function CreateScreen() {
           <>
             {/* How it works */}
             <View style={styles.stepsCard}>
-              <Text style={styles.stepsHeading}>HOW IT WORKS</Text>
+              <Text style={styles.stepsHeading}>{t('create.howItWorks')}</Text>
               {STEPS.map((step, i) => (
                 <View key={step.label} style={styles.stepRow}>
                   <View style={styles.stepNum}>
@@ -304,8 +306,8 @@ export default function CreateScreen() {
             {/* Upload zone */}
             <TouchableOpacity style={styles.pickZone} onPress={pickImage} activeOpacity={0.7}>
               <Ionicons name="add-circle-outline" size={40} color="#9d3d2c" />
-              <Text style={styles.pickTitle}>Upload Card Image</Text>
-              <Text style={styles.pickLabel}>Tap to choose from your gallery</Text>
+              <Text style={styles.pickTitle}>{t('create.uploadTitle')}</Text>
+              <Text style={styles.pickLabel}>{t('create.uploadHint')}</Text>
             </TouchableOpacity>
 
             {/* Inspiration strip */}
@@ -313,7 +315,7 @@ export default function CreateScreen() {
               <View style={styles.inspirationSection}>
                 <View style={styles.inspirationTitleRow}>
                   <Animated.Text style={{ fontSize: 18, transform: [{ scale: sparkle }] }}>✨</Animated.Text>
-                  <Text style={styles.inspirationHeading}>GET INSPIRED</Text>
+                  <Text style={styles.inspirationHeading}>{t('create.getInspired')}</Text>
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inspirationRow}>
                   {inspiration.map((card) => (
@@ -335,7 +337,7 @@ export default function CreateScreen() {
             <>
             {/* Photo size */}
             <View style={styles.controlSection}>
-              <Text style={styles.controlLabel}>Photo size: {Math.round(circleSize)}px</Text>
+              <Text style={styles.controlLabel}>{t('create.photoSize', { px: Math.round(circleSize) })}</Text>
               <Slider
                 style={styles.slider}
                 minimumValue={60}
@@ -347,15 +349,15 @@ export default function CreateScreen() {
                 thumbTintColor="#9d3d2c"
               />
               <TouchableOpacity style={styles.resetBtn} onPress={resetHandles}>
-                <Text style={styles.resetBtnText}>Reset positions</Text>
+                <Text style={styles.resetBtnText}>{t('create.resetPositions')}</Text>
               </TouchableOpacity>
             </View>
 
             {/* Name style */}
             <View style={styles.controlSection}>
-              <Text style={styles.sectionTitle}>Name Style</Text>
+              <Text style={styles.sectionTitle}>{t('create.nameStyle')}</Text>
 
-              <Text style={styles.controlLabel}>Color</Text>
+              <Text style={styles.controlLabel}>{t('create.color')}</Text>
               <View style={styles.colorRow}>
                 {NAME_COLORS.map((c) => (
                   <TouchableOpacity
@@ -366,7 +368,7 @@ export default function CreateScreen() {
                 ))}
               </View>
 
-              <Text style={styles.controlLabel}>Font size: {Math.round(nameFontSize)}px</Text>
+              <Text style={styles.controlLabel}>{t('create.fontSize', { px: Math.round(nameFontSize) })}</Text>
               <Slider
                 style={styles.slider}
                 minimumValue={12}
@@ -383,13 +385,13 @@ export default function CreateScreen() {
                   style={[styles.weightBtn, !nameBold && styles.weightBtnActive]}
                   onPress={() => setNameBold(false)}
                 >
-                  <Text style={[styles.weightBtnText, !nameBold && styles.weightBtnTextActive]}>Normal</Text>
+                  <Text style={[styles.weightBtnText, !nameBold && styles.weightBtnTextActive]}>{t('create.normal')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.weightBtn, nameBold && styles.weightBtnActive]}
                   onPress={() => setNameBold(true)}
                 >
-                  <Text style={[styles.weightBtnText, nameBold && styles.weightBtnTextActive, styles.boldText]}>Bold</Text>
+                  <Text style={[styles.weightBtnText, nameBold && styles.weightBtnTextActive, styles.boldText]}>{t('create.bold')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -398,25 +400,25 @@ export default function CreateScreen() {
 
             {/* Publish settings */}
             <View style={styles.controlSection}>
-              <Text style={styles.sectionTitle}>Publish Settings</Text>
+              <Text style={styles.sectionTitle}>{t('create.publishSettings')}</Text>
 
-              <Text style={styles.controlLabel}>Personalization</Text>
+              <Text style={styles.controlLabel}>{t('create.personalization')}</Text>
               <View style={styles.visibilityRow}>
                 <TouchableOpacity
                   style={[styles.visBtn, personalizable && styles.visBtnActive]}
                   onPress={() => setPersonalizable(true)}
                 >
-                  <Text style={[styles.visBtnText, personalizable && styles.visBtnTextActive]}>Photo & Name</Text>
+                  <Text style={[styles.visBtnText, personalizable && styles.visBtnTextActive]}>{t('create.photoAndName')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.visBtn, !personalizable && styles.visBtnActive]}
                   onPress={() => setPersonalizable(false)}
                 >
-                  <Text style={[styles.visBtnText, !personalizable && styles.visBtnTextActive]}>Plain Card</Text>
+                  <Text style={[styles.visBtnText, !personalizable && styles.visBtnTextActive]}>{t('create.plainCard')}</Text>
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.controlLabel}>Category (optional)</Text>
+              <Text style={styles.controlLabel}>{t('create.categoryOptional')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
                 {CATEGORIES.map((cat) => (
                   <TouchableOpacity
@@ -429,25 +431,25 @@ export default function CreateScreen() {
                     }}
                   >
                     <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>
-                      {cat.replace(/-/g, ' ')}
+                      {categoryLabel(cat)}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
 
-              <Text style={styles.controlLabel}>Visibility</Text>
+              <Text style={styles.controlLabel}>{t('create.visibility')}</Text>
               <View style={styles.visibilityRow}>
                 <TouchableOpacity
                   style={[styles.visBtn, !isPublic && styles.visBtnActive]}
                   onPress={() => setIsPublic(false)}
                 >
-                  <Text style={[styles.visBtnText, !isPublic && styles.visBtnTextActive]}>My Cards</Text>
+                  <Text style={[styles.visBtnText, !isPublic && styles.visBtnTextActive]}>{t('create.myCards')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.visBtn, isPublic && styles.visBtnActive]}
                   onPress={() => setIsPublic(true)}
                 >
-                  <Text style={[styles.visBtnText, isPublic && styles.visBtnTextActive]}>Community</Text>
+                  <Text style={[styles.visBtnText, isPublic && styles.visBtnTextActive]}>{t('create.community')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -459,7 +461,7 @@ export default function CreateScreen() {
                 {publishing ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.ctaBtnText}>Publish Card</Text>
+                  <Text style={styles.ctaBtnText}>{t('create.publishCard')}</Text>
                 )}
               </TouchableOpacity>
             </View>

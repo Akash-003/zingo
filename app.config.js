@@ -40,6 +40,10 @@ export default {
       '@react-native-firebase/app',
       '@react-native-firebase/analytics',
       'expo-web-browser',
+      // Device locale for the i18n layer (src/i18n). supportedLocales generates
+      // locales_config.xml + android:localeConfig so Zingo shows up in Android
+      // 13+ Settings → Apps → Zingo → Language.
+      ['expo-localization', { supportedLocales: ['en', 'hi'] }],
       // Recolors expo-image-picker's Android crop screen (Flip/Rotate/Crop
       // toolbar) — see plugins/withImageCropperColors.js for why.
       './plugins/withImageCropperColors',

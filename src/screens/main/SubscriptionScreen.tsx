@@ -21,14 +21,7 @@ import {
 import { track } from '../../services/analytics';
 import { useUserStore } from '../../store/userStore';
 import { showAlert } from '../../store/alertStore';
-
-const BENEFITS: { icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
-  { icon: 'sparkles-outline', label: 'Watermark-free sharing & downloads' },
-  { icon: 'infinite-outline', label: 'Unlimited personalized cards' },
-  { icon: 'person-circle-outline', label: 'Your photo & name on every card' },
-  { icon: 'images-outline', label: 'Access to all premium designs' },
-  { icon: 'flash-outline', label: 'Priority access to new drops' },
-];
+import { t } from '../../i18n';
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
@@ -40,6 +33,15 @@ function formatDate(iso: string | null): string {
 }
 
 export default function SubscriptionScreen() {
+  // Built per render (not module scope) so it reflects an in-app language
+  // change without needing an app restart — see src/store/languageStore.ts.
+  const BENEFITS: { icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
+    { icon: 'sparkles-outline', label: t('subscription.benefit1') },
+    { icon: 'infinite-outline', label: t('subscription.benefit2') },
+    { icon: 'person-circle-outline', label: t('subscription.benefit3') },
+    { icon: 'images-outline', label: t('subscription.benefit4') },
+    { icon: 'flash-outline', label: t('subscription.benefit5') },
+  ];
   const navigation = useNavigation();
   const uid = useUserStore((s) => s.uid);
 
@@ -74,11 +76,11 @@ export default function SubscriptionScreen() {
       setSub({ ...sub, cancelAtPeriodEnd: true });
       setModalVisible(false);
       showAlert(
-        'Premium stays active',
-        `You'll keep Premium until ${formatDate(sub.currentPeriodEnd)}. It won't renew after that.`,
+        t('subscription.staysActiveTitle'),
+        t('subscription.staysActiveBody', { date: formatDate(sub.currentPeriodEnd) }),
       );
     } catch {
-      showAlert('Something went wrong', 'Please try again in a moment.');
+      showAlert(t('subscription.wrongTitle'), t('subscription.wrongBody'));
     } finally {
       setCancelling(false);
     }
@@ -86,8 +88,8 @@ export default function SubscriptionScreen() {
 
   const willNotRenew = sub?.cancelAtPeriodEnd ?? false;
   const statusPill = willNotRenew
-    ? `Ends ${formatDate(sub?.currentPeriodEnd ?? null)}`
-    : 'Active';
+    ? t('subscription.endsOn', { date: formatDate(sub?.currentPeriodEnd ?? null) })
+    : t('subscription.active');
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -101,7 +103,7 @@ export default function SubscriptionScreen() {
         >
           <Ionicons name="chevron-back" size={24} color="#1c1c19" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Subscription</Text>
+        <Text style={styles.headerTitle}>{t('subscription.header')}</Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -134,27 +136,24 @@ export default function SubscriptionScreen() {
 
           {/* Details */}
           <View style={styles.card}>
-            <DetailRow label="Plan" value={sub?.planLabel ?? '—'} />
+            <DetailRow label={t('subscription.plan')} value={sub?.planLabel ?? '—'} />
             <View style={styles.divider} />
-            <DetailRow label="Price" value={sub?.planAmountDisplay ?? '—'} />
+            <DetailRow label={t('subscription.price')} value={sub?.planAmountDisplay ?? '—'} />
             <View style={styles.divider} />
             <DetailRow
-              label={willNotRenew ? 'Premium until' : 'Renews on'}
+              label={willNotRenew ? t('subscription.premiumUntil') : t('subscription.renewsOn')}
               value={formatDate(sub?.currentPeriodEnd ?? null)}
             />
             {willNotRenew && (
               <View style={styles.noRenewNote}>
                 <Ionicons name="information-circle-outline" size={16} color="#56423e" />
-                <Text style={styles.noRenewText}>
-                  Your subscription won't renew. You keep Premium until the date
-                  above.
-                </Text>
+                <Text style={styles.noRenewText}>{t('subscription.noRenewNote')}</Text>
               </View>
             )}
           </View>
 
           {/* Benefits */}
-          <Text style={styles.sectionTitle}>Your Premium benefits</Text>
+          <Text style={styles.sectionTitle}>{t('subscription.benefitsTitle')}</Text>
           <View style={styles.card}>
             {BENEFITS.map((b, i) => (
               <View key={b.label}>
@@ -177,7 +176,7 @@ export default function SubscriptionScreen() {
               onPress={() => setModalVisible(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelBtnText}>Cancel subscription</Text>
+              <Text style={styles.cancelBtnText}>{t('subscription.cancel')}</Text>
             </TouchableOpacity>
           )}
         </ScrollView>
@@ -198,10 +197,8 @@ export default function SubscriptionScreen() {
           />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Keep your Premium?</Text>
-            <Text style={styles.sheetSubtitle}>
-              If you cancel, here's what you'll lose when Premium ends:
-            </Text>
+            <Text style={styles.sheetTitle}>{t('subscription.keepTitle')}</Text>
+            <Text style={styles.sheetSubtitle}>{t('subscription.keepSubtitle')}</Text>
             <View style={styles.loseList}>
               {BENEFITS.slice(0, 3).map((b) => (
                 <View key={b.label} style={styles.loseRow}>
@@ -217,7 +214,7 @@ export default function SubscriptionScreen() {
               onPress={() => setModalVisible(false)}
               disabled={cancelling}
             >
-              <Text style={styles.keepBtnText}>Keep Premium</Text>
+              <Text style={styles.keepBtnText}>{t('subscription.keepBtn')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -229,7 +226,7 @@ export default function SubscriptionScreen() {
               {cancelling ? (
                 <ActivityIndicator size="small" color="#ba1a1a" />
               ) : (
-                <Text style={styles.cancelAnywayText}>Cancel anyway</Text>
+                <Text style={styles.cancelAnywayText}>{t('subscription.cancelAnyway')}</Text>
               )}
             </TouchableOpacity>
           </View>

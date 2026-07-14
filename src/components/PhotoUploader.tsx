@@ -14,6 +14,7 @@ import { supabase } from '../services/supabase';
 import { removeBackground } from '../services/backgroundRemoval';
 import { useUserStore } from '../store/userStore';
 import { showAlert } from '../store/alertStore';
+import { t } from '../i18n';
 
 interface PhotoUploaderProps {
   onPhotoUploaded: (url: string) => void;
@@ -34,7 +35,7 @@ export default function PhotoUploader({
   const handlePress = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      showAlert('Permission required', 'Please allow photo access to upload your picture.');
+      showAlert(t('common.permissionRequired'), t('uploader.permissionBody'));
       return;
     }
 
@@ -55,7 +56,7 @@ export default function PhotoUploader({
       const publicUrl = await uploadToStorage(processedUri);
       onPhotoUploaded(publicUrl);
     } catch (err) {
-      showAlert('Upload failed', 'Could not upload your photo. Please try again.');
+      showAlert(t('uploader.failedTitle'), t('uploader.failedBody'));
     } finally {
       setUploading(false);
     }

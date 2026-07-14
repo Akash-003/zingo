@@ -16,24 +16,31 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
 import { useUserStore } from '../../store/userStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { showAlert } from '../../store/alertStore';
 import PhotoUploader from '../../components/PhotoUploader';
-
-const STATS = [
-  { label: 'Collections', value: '0' },
-  { label: 'Followers', value: '0' },
-  { label: 'Saved', value: '0' },
-  { label: 'Featured', value: '0' },
-];
-
-const SETTINGS = [
-  { icon: 'notifications-outline' as const, label: 'Notifications & Updates' },
-  { icon: 'lock-closed-outline' as const, label: 'Privacy & Security' },
-];
+import { t } from '../../i18n';
 
 export default function ProfileScreen() {
+  const language = useLanguageStore((s) => s.language);
+  const setLanguage = useLanguageStore((s) => s.setLanguage);
+
+  // Built per render (not module scope) so it reflects an in-app language
+  // change without needing an app restart — see src/store/languageStore.ts.
+  const STATS = [
+    { label: t('profile.statCollections'), value: '0' },
+    { label: t('profile.statFollowers'), value: '0' },
+    { label: t('profile.statSaved'), value: '0' },
+    { label: t('profile.statFeatured'), value: '0' },
+  ];
+  const SETTINGS = [
+    { id: 'notifications', icon: 'notifications-outline' as const, label: t('profile.notifications') },
+    { id: 'language', icon: 'language-outline' as const, label: t('profile.language') },
+    { id: 'privacy', icon: 'lock-closed-outline' as const, label: t('profile.privacy') },
+  ];
   const [editPhotoModal, setEditPhotoModal] = useState(false);
+  const [languageModal, setLanguageModal] = useState(false);
   const navigation = useNavigation();
 
   const name = useUserStore((s) => s.name);
@@ -59,9 +66,9 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = () => {
-    showAlert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: signOut },
+    showAlert(t('profile.signOut'), t('profile.signOutConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('profile.signOut'), style: 'destructive', onPress: signOut },
     ]);
   };
 
@@ -98,7 +105,7 @@ export default function ProfileScreen() {
           <Text style={styles.heroName}>{name}</Text>
           {isPremium && (
             <View style={styles.premiumBadge}>
-              <Text style={styles.premiumText}>PREMIUM</Text>
+              <Text style={styles.premiumText}>{t('profile.premiumBadge')}</Text>
             </View>
           )}
         </View>
@@ -120,9 +127,7 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.premiumCardText}>
                 <Text style={styles.premiumCardTitle}>Zingo Premium</Text>
-                <Text style={styles.premiumCardSubtitle}>
-                  Manage your subscription
-                </Text>
+                <Text style={styles.premiumCardSubtitle}>{t('profile.manageSubscription')}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.85)" />
             </LinearGradient>
@@ -141,10 +146,8 @@ export default function ProfileScreen() {
 
         {/* Identity Vault */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Identity Vault</Text>
-          <Text style={styles.cardSubtitle}>
-            Switch between your curated visual identities.
-          </Text>
+          <Text style={styles.cardTitle}>{t('profile.identityVault')}</Text>
+          <Text style={styles.cardSubtitle}>{t('profile.vaultSubtitle')}</Text>
 
           <View style={styles.vaultRow}>
             {photos.map((url) => {
@@ -162,7 +165,7 @@ export default function ProfileScreen() {
                     </View>
                     {isPrimary && <View style={styles.primaryRing} pointerEvents="none" />}
                   </View>
-                  <Text style={styles.vaultLabel}>{isPrimary ? 'Primary' : 'Set Primary'}</Text>
+                  <Text style={styles.vaultLabel}>{isPrimary ? t('profile.primary') : t('profile.setPrimary')}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -175,7 +178,7 @@ export default function ProfileScreen() {
                     currentPhotoUrl={null}
                     size={54}
                   />
-                  <Text style={styles.vaultLabel}>Add</Text>
+                  <Text style={styles.vaultLabel}>{t('profile.add')}</Text>
                 </View>
               ))}
           </View>
@@ -185,13 +188,15 @@ export default function ProfileScreen() {
         <View style={styles.settingsSection}>
           {SETTINGS.map((row) => (
             <TouchableOpacity
-              key={row.label}
+              key={row.id}
               style={styles.settingsRow}
               onPress={() => {
-                if (row.label === 'Notifications & Updates') {
+                if (row.id === 'notifications') {
                   void Linking.openSettings();
+                } else if (row.id === 'language') {
+                  setLanguageModal(true);
                 } else {
-                  showAlert(row.label, 'This feature is coming soon.');
+                  showAlert(row.label, t('profile.comingSoon'));
                 }
               }}
               activeOpacity={0.7}
@@ -200,6 +205,11 @@ export default function ProfileScreen() {
                 <Ionicons name={row.icon} size={20} color="#56423e" />
               </View>
               <Text style={styles.settingsLabel}>{row.label}</Text>
+              {row.id === 'language' && (
+                <Text style={styles.settingsValue}>
+                  {language === 'hi' ? 'हिन्दी' : 'English'}
+                </Text>
+              )}
               <Ionicons name="chevron-forward" size={18} color="#89726d" />
             </TouchableOpacity>
           ))}
@@ -212,7 +222,7 @@ export default function ProfileScreen() {
             <View style={[styles.settingsIcon, styles.signOutIcon]}>
               <Ionicons name="log-out-outline" size={20} color="#ba1a1a" />
             </View>
-            <Text style={[styles.settingsLabel, styles.signOutLabel]}>Sign Out</Text>
+            <Text style={[styles.settingsLabel, styles.signOutLabel]}>{t('profile.signOut')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -257,7 +267,7 @@ export default function ProfileScreen() {
         >
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Update Profile Photo</Text>
+            <Text style={styles.modalTitle}>{t('profile.updatePhotoTitle')}</Text>
             <PhotoUploader
               onPhotoUploaded={handleHeroPhotoUploaded}
               currentPhotoUrl={primaryPhotoUrl}
@@ -266,12 +276,76 @@ export default function ProfileScreen() {
               style={styles.modalClose}
               onPress={() => setEditPhotoModal(false)}
             >
-              <Text style={styles.modalCloseText}>Cancel</Text>
+              <Text style={styles.modalCloseText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
+
+      {/* Language modal */}
+      <Modal
+        visible={languageModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLanguageModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setLanguageModal(false)}
+        >
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>{t('profile.chooseLanguage')}</Text>
+              <View style={styles.languageOptions}>
+                <TouchableOpacity
+                  style={[styles.languageOption, language === 'en' && styles.languageOptionActive]}
+                  onPress={() => {
+                    setLanguage('en');
+                    setLanguageModal(false);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.languageOptionText,
+                      language === 'en' && styles.languageOptionTextActive,
+                    ]}
+                  >
+                    English
+                  </Text>
+                  {language === 'en' && <Ionicons name="checkmark" size={18} color="#ffffff" />}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.languageOption, language === 'hi' && styles.languageOptionActive]}
+                  onPress={() => {
+                    setLanguage('hi');
+                    setLanguageModal(false);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.languageOptionText,
+                      language === 'hi' && styles.languageOptionTextActive,
+                    ]}
+                  >
+                    हिन्दी
+                  </Text>
+                  {language === 'hi' && <Ionicons name="checkmark" size={18} color="#ffffff" />}
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.modalClose}
+                onPress={() => setLanguageModal(false)}
+              >
+                <Text style={styles.modalCloseText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -399,6 +473,7 @@ const styles = StyleSheet.create({
   },
   signOutIcon: { backgroundColor: '#fdf0f0' },
   settingsLabel: { flex: 1, fontSize: 15, color: '#1c1c19' },
+  settingsValue: { fontSize: 13, color: '#89726d', marginRight: 8 },
   signOutLabel: { color: '#ba1a1a' },
   adminSection: { alignItems: 'center', paddingVertical: 12, gap: 4 },
   adminLink: { alignItems: 'center', paddingVertical: 8 },
@@ -422,4 +497,24 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#1c1c19' },
   modalClose: { paddingVertical: 8, paddingHorizontal: 24 },
   modalCloseText: { fontSize: 15, color: '#89726d' },
+
+  // Language modal
+  languageOptions: { width: '100%', gap: 10 },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#89726d',
+    backgroundColor: '#ffffff',
+  },
+  languageOptionActive: {
+    backgroundColor: '#9d3d2c',
+    borderColor: '#9d3d2c',
+  },
+  languageOptionText: { fontSize: 15, fontWeight: '600', color: '#56423e' },
+  languageOptionTextActive: { color: '#ffffff' },
 });

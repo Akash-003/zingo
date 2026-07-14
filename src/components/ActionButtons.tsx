@@ -1,5 +1,6 @@
 import { View, TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { t } from '../i18n';
 
 interface ActionButtonsProps {
   onShare: () => Promise<void>;
@@ -33,7 +34,7 @@ export default function ActionButtons({
         ) : (
           <Ionicons name="share-social-outline" size={18} color="#fff" />
         )}
-        <Text style={styles.primaryLabel}>Share</Text>
+        <Text style={styles.primaryLabel}>{t('actions.share')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -47,7 +48,7 @@ export default function ActionButtons({
         ) : (
           <Ionicons name="download-outline" size={18} color="#9d3d2c" />
         )}
-        <Text style={styles.saveLabel}>Save</Text>
+        <Text style={styles.saveLabel}>{t('actions.save')}</Text>
       </TouchableOpacity>
 
       {/* Secondary actions — only for personalizable cards */}
@@ -59,7 +60,7 @@ export default function ActionButtons({
             activeOpacity={0.7}
           >
             <Ionicons name="camera-outline" size={16} color="#56423e" />
-            <Text style={styles.secondaryLabel}>Photo</Text>
+            <Text style={styles.secondaryLabel}>{t('actions.photo')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -68,7 +69,7 @@ export default function ActionButtons({
             activeOpacity={0.7}
           >
             <Ionicons name="pencil-outline" size={16} color="#56423e" />
-            <Text style={styles.secondaryLabel}>Name</Text>
+            <Text style={styles.secondaryLabel}>{t('actions.name')}</Text>
           </TouchableOpacity>
         </>
       )}

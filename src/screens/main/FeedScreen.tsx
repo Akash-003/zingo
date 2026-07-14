@@ -19,7 +19,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import QuoteCard from '../../components/cards/QuoteCard';
 import ActionButtons from '../../components/ActionButtons';
-import CategoryChips, { CATEGORIES } from '../../components/CategoryChips';
+import CategoryChips, { useCategories } from '../../components/CategoryChips';
 import PaywallModal from '../../components/PaywallModal';
 import { useCards } from '../../hooks/useCards';
 import { useCardCapture } from '../../hooks/useCardCapture';
@@ -30,6 +30,7 @@ import { useCardsStore, Card } from '../../store/cardsStore';
 import { useUserStore } from '../../store/userStore';
 import { showAlert } from '../../store/alertStore';
 import { useProfileEditStore } from '../../store/profileEditStore';
+import { t } from '../../i18n';
 
 interface CardItemProps {
   card: Card;
@@ -67,7 +68,7 @@ function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
       await action(uri);
       void track(uid, event, { card_id: card.id, category: card.category });
     } catch (err) {
-      showAlert('Error', err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      showAlert(t('common.error'), err instanceof Error ? err.message : t('common.genericError'));
     } finally {
       setLoadingAction(null);
     }
@@ -173,6 +174,7 @@ function CardItem({ card, itemWidth, itemHeight }: CardItemProps) {
 }
 
 export default function FeedScreen() {
+  const CATEGORIES = useCategories();
   const { width } = useWindowDimensions();
   const itemWidth = width - 32;
   const [listAreaHeight, setListAreaHeight] = useState(0);
@@ -201,7 +203,7 @@ export default function FeedScreen() {
         const now = Date.now();
         if (now - lastBackPress.current < 2000) return false; // second press → exit
         lastBackPress.current = now;
-        ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+        ToastAndroid.show(t('feed.backExit'), ToastAndroid.SHORT);
         return true;
       });
       return () => sub.remove();
@@ -240,7 +242,7 @@ export default function FeedScreen() {
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search categories"
+            placeholder={t('feed.searchPlaceholder')}
             placeholderTextColor="#89726d"
             returnKeyType="search"
             onSubmitEditing={() => {
@@ -263,7 +265,7 @@ export default function FeedScreen() {
           activeOpacity={0.8}
           onPress={() => navigation.navigate('Create' as never)}
         >
-          <Text style={styles.createBtnText}>CREATE</Text>
+          <Text style={styles.createBtnText}>{t('feed.create')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.avatar}
@@ -310,7 +312,7 @@ export default function FeedScreen() {
           </View>
         ) : cards.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No cards in this category yet.</Text>
+            <Text style={styles.emptyText}>{t('feed.emptyCategory')}</Text>
           </View>
         ) : (
           <FlatList

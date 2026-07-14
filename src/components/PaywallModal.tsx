@@ -10,6 +10,7 @@ import {
 import { fetchPlans, startSubscription, Plan } from '../services/payments';
 import { track } from '../services/analytics';
 import { showAlert } from '../store/alertStore';
+import { t } from '../i18n';
 
 interface PaywallModalProps {
   visible: boolean;
@@ -40,7 +41,13 @@ export default function PaywallModal({
   const [plansLoading, setPlansLoading] = useState(false);
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
 
-  const actionLabel = context === 'share' ? 'Share' : 'Save';
+  const isShare = context === 'share';
+  const subtitle = personalizable
+    ? t(isShare ? 'paywall.subtitlePersonalizedShare' : 'paywall.subtitlePersonalizedSave')
+    : t(isShare ? 'paywall.subtitlePlainShare' : 'paywall.subtitlePlainSave');
+  const freeBtnLabel = personalizable
+    ? t(isShare ? 'paywall.freeShareNoPersonalization' : 'paywall.freeSaveNoPersonalization')
+    : t(isShare ? 'paywall.freeShareWatermark' : 'paywall.freeSaveWatermark');
 
   useEffect(() => {
     if (!visible) return;
@@ -72,7 +79,7 @@ export default function PaywallModal({
         onSubscribed(plan.razorpayPlanId);
       }
     } catch {
-      showAlert('Payment failed', 'Something went wrong. Please try again.');
+      showAlert(t('paywall.paymentFailedTitle'), t('common.genericError'));
     } finally {
       setPurchasingPlanId(null);
     }
@@ -96,21 +103,15 @@ export default function PaywallModal({
         <View style={styles.sheet}>
           <View style={styles.handle} />
           <Text style={styles.title}>
-            {personalizable ? 'Unlock personalized cards' : 'Remove the watermark'}
+            {personalizable ? t('paywall.titlePersonalized') : t('paywall.titlePlain')}
           </Text>
-          <Text style={styles.subtitle}>
-            {personalizable
-              ? `Go Premium to ${actionLabel.toLowerCase()} unlimited cards with your name and photo — no watermark.`
-              : `Go Premium to ${actionLabel.toLowerCase()} unlimited cards without the watermark.`}
-          </Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
 
           {/* Plans */}
           {plansLoading ? (
             <ActivityIndicator color="#9d3d2c" style={styles.plansLoader} />
           ) : plans.length === 0 ? (
-            <Text style={styles.emptyPlans}>
-              Plans are unavailable right now. Please try again later.
-            </Text>
+            <Text style={styles.emptyPlans}>{t('paywall.plansUnavailable')}</Text>
           ) : (
             <View style={styles.plans}>
               {plans.map((plan) => {
@@ -144,16 +145,10 @@ export default function PaywallModal({
             onPress={onShareWithoutPersonalization}
             disabled={purchasing}
           >
-            <Text style={styles.freeBtnText}>
-              {personalizable
-                ? `${actionLabel} without personalization`
-                : `${actionLabel} with watermark`}
-            </Text>
+            <Text style={styles.freeBtnText}>{freeBtnLabel}</Text>
           </TouchableOpacity>
           <Text style={styles.freeHint}>
-            {personalizable
-              ? 'Free cards are shared without your name or photo.'
-              : 'Free cards are shared with a watermark.'}
+            {personalizable ? t('paywall.freeHintPersonalized') : t('paywall.freeHintPlain')}
           </Text>
         </View>
       </View>

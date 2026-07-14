@@ -18,6 +18,8 @@ import { supabase } from '../../services/supabase';
 import { useUserStore } from '../../store/userStore';
 import { useCardsStore } from '../../store/cardsStore';
 import { showAlert } from '../../store/alertStore';
+import { t, categoryLabel } from '../../i18n';
+import { useCategories } from '../../components/CategoryChips';
 
 interface CollectionCard {
   id: string;
@@ -27,24 +29,11 @@ interface CollectionCard {
   createdAt: string;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  'good-morning': 'Good Morning',
-  motivational: 'Motivational',
-  love: 'Love',
-  birthday: 'Birthday',
-  'good-night': 'Good Night',
-  festivals: 'Festivals',
-  shayari: 'Shayari',
-  devotional: 'Devotional',
-  friendship: 'Friendship',
-  life: 'Life',
-};
-
-const CATEGORIES = Object.entries(CATEGORY_LABELS).map(([id, label]) => ({ id, label }));
-
 export default function CollectionsScreen() {
   const { width } = useWindowDimensions();
   const navigation = useNavigation();
+  // Same list as the feed chips, minus the 'all' pseudo-category.
+  const CATEGORIES = useCategories().filter((c) => c.id !== 'all');
   const uid = useUserStore((s) => s.uid);
   const removeCardFromFeed = useCardsStore((s) => s.removeCard);
 
@@ -103,7 +92,7 @@ export default function CollectionsScreen() {
       .eq('id', editCard.id);
     setSaving(false);
     if (error) {
-      showAlert('Error', 'Could not save changes. Please try again.');
+      showAlert(t('common.error'), t('collections.saveError'));
       return;
     }
     setCards((prev) =>
@@ -116,15 +105,15 @@ export default function CollectionsScreen() {
 
   const confirmDelete = (card: CollectionCard) => {
     closeMenu();
-    showAlert('Delete Card', 'This card will be permanently removed.', [
-      { text: 'Cancel', style: 'cancel' },
+    showAlert(t('collections.deleteCard'), t('collections.deleteConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           const { error } = await supabase.from('cards').delete().eq('id', card.id);
           if (error) {
-            showAlert('Error', 'Could not delete the card. Please try again.');
+            showAlert(t('common.error'), t('collections.deleteError'));
             return;
           }
           setCards((prev) => prev.filter((c) => c.id !== card.id));
@@ -138,7 +127,7 @@ export default function CollectionsScreen() {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>My Cards</Text>
+        <Text style={styles.title}>{t('create.myCards')}</Text>
         {cards.length > 0 && (
           <View style={styles.countBadge}>
             <Text style={styles.countText}>{cards.length}</Text>
@@ -153,15 +142,15 @@ export default function CollectionsScreen() {
       ) : cards.length === 0 ? (
         <View style={styles.center}>
           <Ionicons name="images-outline" size={56} color="#c8b5af" />
-          <Text style={styles.emptyTitle}>No cards yet</Text>
-          <Text style={styles.emptySubtitle}>Tap + to create your first card</Text>
+          <Text style={styles.emptyTitle}>{t('collections.emptyTitle')}</Text>
+          <Text style={styles.emptySubtitle}>{t('collections.emptySubtitle')}</Text>
           <TouchableOpacity
             style={styles.createBtn}
             activeOpacity={0.8}
             onPress={() => navigation.navigate('Create' as never)}
           >
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={styles.createBtnText}>Create a Card</Text>
+            <Text style={styles.createBtnText}>{t('create.heading')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -182,7 +171,7 @@ export default function CollectionsScreen() {
               {item.category != null && (
                 <View style={styles.chip}>
                   <Text style={styles.chipText} numberOfLines={1}>
-                    {CATEGORY_LABELS[item.category] ?? item.category}
+                    {categoryLabel(item.category)}
                   </Text>
                 </View>
               )}
@@ -208,15 +197,15 @@ export default function CollectionsScreen() {
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeMenu}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.menuSheet}>
-              <Text style={styles.menuTitle}>Card Options</Text>
+              <Text style={styles.menuTitle}>{t('collections.cardOptions')}</Text>
               <TouchableOpacity style={styles.menuRow} onPress={() => menuCard && openEdit(menuCard)}>
                 <Ionicons name="pencil-outline" size={20} color="#1c1c19" />
-                <Text style={styles.menuRowText}>Edit Card</Text>
+                <Text style={styles.menuRowText}>{t('collections.editCard')}</Text>
               </TouchableOpacity>
               <View style={styles.menuDivider} />
               <TouchableOpacity style={styles.menuRow} onPress={() => menuCard && confirmDelete(menuCard)}>
                 <Ionicons name="trash-outline" size={20} color="#ba1a1a" />
-                <Text style={[styles.menuRowText, styles.deleteText]}>Delete Card</Text>
+                <Text style={[styles.menuRowText, styles.deleteText]}>{t('collections.deleteCard')}</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -229,10 +218,10 @@ export default function CollectionsScreen() {
           <TouchableOpacity activeOpacity={1} style={{ width: '100%' }}>
             <View style={styles.editSheet}>
               <View style={styles.sheetHandle} />
-              <Text style={styles.editTitle}>Edit Card</Text>
+              <Text style={styles.editTitle}>{t('collections.editCard')}</Text>
 
               {/* Category */}
-              <Text style={styles.editLabel}>CATEGORY</Text>
+              <Text style={styles.editLabel}>{t('collections.categoryLabel')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
                 {CATEGORIES.map((cat) => (
                   <TouchableOpacity
@@ -248,26 +237,26 @@ export default function CollectionsScreen() {
               </ScrollView>
 
               {/* Visibility */}
-              <Text style={styles.editLabel}>VISIBILITY</Text>
+              <Text style={styles.editLabel}>{t('collections.visibilityLabel')}</Text>
               <View style={styles.visRow}>
                 <TouchableOpacity
                   style={[styles.visBtn, !editIsPublic && styles.visBtnActive]}
                   onPress={() => setEditIsPublic(false)}
                 >
                   <Ionicons name="lock-closed-outline" size={16} color={!editIsPublic ? '#fff' : '#89726d'} />
-                  <Text style={[styles.visBtnText, !editIsPublic && styles.visBtnTextActive]}>Private</Text>
+                  <Text style={[styles.visBtnText, !editIsPublic && styles.visBtnTextActive]}>{t('collections.private')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.visBtn, editIsPublic && styles.visBtnActive]}
                   onPress={() => setEditIsPublic(true)}
                 >
                   <Ionicons name="globe-outline" size={16} color={editIsPublic ? '#fff' : '#89726d'} />
-                  <Text style={[styles.visBtnText, editIsPublic && styles.visBtnTextActive]}>Community</Text>
+                  <Text style={[styles.visBtnText, editIsPublic && styles.visBtnTextActive]}>{t('create.community')}</Text>
                 </TouchableOpacity>
               </View>
 
               <TouchableOpacity style={styles.saveBtn} onPress={saveEdit} disabled={saving}>
-                {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveBtnText}>Save Changes</Text>}
+                {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveBtnText}>{t('collections.saveChanges')}</Text>}
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

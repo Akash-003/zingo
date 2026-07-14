@@ -24,33 +24,11 @@ import { useTruecaller } from '@ajitpatel28/react-native-truecaller';
 import { useAuth } from '../../hooks/useAuth';
 import { showAlert } from '../../store/alertStore';
 import { track } from '../../services/analytics';
+import { t } from '../../i18n';
 
 const TRUECALLER_CLIENT_ID = Constants.expoConfig?.extra?.TRUECALLER_CLIENT_ID as
   | string
   | undefined;
-
-// Sample cards for the auto-cycling preview deck. Gradients use the Zingo
-// brand ramp (amber → orange → rose).
-const SAMPLES = [
-  {
-    tag: 'GOOD MORNING',
-    quote: 'The simplest moments often hold the most profound weight.',
-    author: 'A. RIVERA',
-    colors: ['#FBBF24', '#F97316'] as const,
-  },
-  {
-    tag: 'MOTIVATION',
-    quote: 'Begin again. Every sunrise is a quiet invitation to start.',
-    author: 'M. OKAFOR',
-    colors: ['#F97316', '#E11D48'] as const,
-  },
-  {
-    tag: 'LIFE',
-    quote: 'You are the story you keep choosing to tell yourself.',
-    author: 'S. KAPOOR',
-    colors: ['#E11D48', '#9d3d2c'] as const,
-  },
-];
 
 const CYCLE_MS = 2800; // time each card stays in front
 const ANIM_MS = 600; // duration of the advance animation
@@ -67,6 +45,29 @@ const POS = [
 const slot = (p: number) => POS[p + 1];
 
 function QuoteDeck() {
+  // Built per render (not module scope) so it reflects an in-app language
+  // change without needing an app restart — see src/store/languageStore.ts.
+  // Gradients use the Zingo brand ramp (amber → orange → rose).
+  const SAMPLES = [
+    {
+      tag: t('welcome.deckTag1'),
+      quote: t('welcome.deckQuote1'),
+      author: 'A. RIVERA',
+      colors: ['#FBBF24', '#F97316'] as const,
+    },
+    {
+      tag: t('welcome.deckTag2'),
+      quote: t('welcome.deckQuote2'),
+      author: 'M. OKAFOR',
+      colors: ['#F97316', '#E11D48'] as const,
+    },
+    {
+      tag: t('welcome.deckTag3'),
+      quote: t('welcome.deckQuote3'),
+      author: 'S. KAPOOR',
+      colors: ['#E11D48', '#9d3d2c'] as const,
+    },
+  ];
   const [index, setIndex] = useState(0);
   const anim = useRef(new Animated.Value(0)).current;
 
@@ -167,7 +168,7 @@ export default function WelcomeScreen() {
       void track(null, 'login_completed', { method: 'truecaller' });
       // Success → onAuthStateChange navigates away; keep the spinner until then.
     } catch {
-      showAlert('Sign in failed', 'Could not sign in with Truecaller. Please try again.');
+      showAlert(t('welcome.signInFailedTitle'), t('welcome.signInFailedTruecaller'));
       setLoadingTruecaller(false);
     }
   };
@@ -221,7 +222,7 @@ export default function WelcomeScreen() {
       await signInWithGoogle();
       void track(null, 'login_completed', { method: 'google' });
     } catch {
-      showAlert('Sign in failed', 'Could not sign in with Google. Please try again.');
+      showAlert(t('welcome.signInFailedTitle'), t('welcome.signInFailedGoogle'));
     } finally {
       setLoadingGoogle(false);
     }
@@ -240,7 +241,7 @@ export default function WelcomeScreen() {
       await signInAsGuest();
       void track(null, 'login_completed', { method: 'guest' });
     } catch {
-      showAlert('Sign in failed', 'Could not continue as guest. Please try again.');
+      showAlert(t('welcome.signInFailedTitle'), t('welcome.signInFailedGuest'));
     } finally {
       setLoadingGuest(false);
     }
@@ -253,8 +254,9 @@ export default function WelcomeScreen() {
       {/* Hero */}
       <View style={styles.hero}>
         <Text style={styles.heroText}>
-          Daily Status,{'\n'}
-          In Your <Text style={styles.heroAccent}>Style</Text>
+          {t('welcome.heroPre')}
+          <Text style={styles.heroAccent}>{t('welcome.heroAccent')}</Text>
+          {t('welcome.heroPost')}
         </Text>
       </View>
 
@@ -278,7 +280,7 @@ export default function WelcomeScreen() {
                 source={{ uri: 'https://www.google.com/favicon.ico' }}
                 style={styles.googleIcon}
               />
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
+              <Text style={styles.googleButtonText}>{t('welcome.continueGoogle')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -296,7 +298,7 @@ export default function WelcomeScreen() {
             ) : (
               <>
                 <Ionicons name="call" size={16} color="#ffffff" />
-                <Text style={styles.truecallerButtonText}>Continue with Truecaller</Text>
+                <Text style={styles.truecallerButtonText}>{t('welcome.continueTruecaller')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -312,27 +314,28 @@ export default function WelcomeScreen() {
           {loadingGuest ? (
             <ActivityIndicator size="small" color="#56423e" />
           ) : (
-            <Text style={styles.guestLinkText}>Browse as Guest</Text>
+            <Text style={styles.guestLinkText}>{t('welcome.browseGuest')}</Text>
           )}
         </TouchableOpacity>
       </View>
 
       {/* Footer */}
       <Text style={styles.footer}>
-        By continuing, you agree to our{' '}
+        {t('welcome.footerPre')}
         <Text
           style={styles.footerLink}
           onPress={() => Linking.openURL('https://zingo.digitalftprints.com/terms-conditions/')}
         >
-          Terms
+          {t('welcome.footerTerms')}
         </Text>
-        {' '}and{' '}
+        {t('welcome.footerAnd')}
         <Text
           style={styles.footerLink}
           onPress={() => Linking.openURL('https://zingo.digitalftprints.com/privacy-policy/')}
         >
-          Privacy
-        </Text>.
+          {t('welcome.footerPrivacy')}
+        </Text>
+        {t('welcome.footerPost')}
       </Text>
     </SafeAreaView>
   );

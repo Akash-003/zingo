@@ -10,10 +10,12 @@ import { registerForPushNotifications } from '../services/notifications';
 import AuthStack from './AuthStack';
 import MainTabs from './MainTabs';
 import ProfileSetupScreen from '../screens/auth/ProfileSetupScreen';
+import LanguageSelectScreen from '../screens/auth/LanguageSelectScreen';
 
 export default function RootNavigator() {
   const [initialising, setInitialising] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
+  const [languagePicked, setLanguagePicked] = useState(false);
 
   const uid = useUserStore((s) => s.uid);
   const name = useUserStore((s) => s.name);
@@ -49,7 +51,10 @@ export default function RootNavigator() {
   }
 
   if (!session) return <AuthStack />;
-  if (!name) return <ProfileSetupScreen />;
+  if (!name) {
+    if (!languagePicked) return <LanguageSelectScreen onContinue={() => setLanguagePicked(true)} />;
+    return <ProfileSetupScreen />;
+  }
   return <MainTabs />;
 }
 

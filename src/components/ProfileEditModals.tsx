@@ -14,6 +14,7 @@ import PhotoUploader from './PhotoUploader';
 import { useProfileEditStore } from '../store/profileEditStore';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useUserStore } from '../store/userStore';
+import { t } from '../i18n';
 
 // Single mounted instance (see App.tsx) — same pattern as <AppAlert/>.
 // Deliberately NOT RN's <Modal>: its Android Dialog window wasn't reliably
@@ -97,15 +98,13 @@ export default function ProfileEditModals() {
           />
           <View style={sheetStyle}>
             <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Edit Display Name</Text>
-            <Text style={styles.modalSubtitle}>
-              This name appears on every card you share.
-            </Text>
+            <Text style={styles.modalTitle}>{t('editProfile.nameTitle')}</Text>
+            <Text style={styles.modalSubtitle}>{t('editProfile.nameSubtitle')}</Text>
             <TextInput
               style={styles.nameInput}
               value={editNameValue}
               onChangeText={setEditNameValue}
-              placeholder="Your name"
+              placeholder={t('editProfile.namePlaceholder')}
               placeholderTextColor="rgba(86,66,62,0.4)"
               autoFocus
               returnKeyType="done"
@@ -113,7 +112,7 @@ export default function ProfileEditModals() {
             />
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalCancelBtn} onPress={closeNameModal}>
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalSaveBtn, profileLoading && styles.modalBtnDisabled]}
@@ -123,7 +122,7 @@ export default function ProfileEditModals() {
                 {profileLoading ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={styles.modalSaveText}>Save</Text>
+                  <Text style={styles.modalSaveText}>{t('common.save')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -140,15 +139,13 @@ export default function ProfileEditModals() {
           />
           <View style={sheetStyle}>
             <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Change Photo</Text>
-            <Text style={styles.modalSubtitle}>
-              Upload a new photo to appear on all your cards.
-            </Text>
+            <Text style={styles.modalTitle}>{t('editProfile.photoTitle')}</Text>
+            <Text style={styles.modalSubtitle}>{t('editProfile.photoSubtitle')}</Text>
             <View style={styles.uploaderWrap}>
               <PhotoUploader onPhotoUploaded={handlePhotoUploaded} currentPhotoUrl={primaryPhotoUrl} />
             </View>
             <TouchableOpacity style={styles.modalCancelStandalone} onPress={closePhotoModal}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>

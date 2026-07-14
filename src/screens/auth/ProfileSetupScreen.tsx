@@ -18,6 +18,7 @@ import { supabase } from '../../services/supabase';
 import { useUserStore } from '../../store/userStore';
 import { showAlert } from '../../store/alertStore';
 import { track } from '../../services/analytics';
+import { t } from '../../i18n';
 
 export default function ProfileSetupScreen() {
   const uid = useUserStore((s) => s.uid);
@@ -107,9 +108,9 @@ export default function ProfileSetupScreen() {
       void track(uid, 'profile_completed', { skipped: skipName });
       if (!skipName && nameToSave.trim()) setName(nameToSave.trim());
       // If skipping, set a placeholder so RootNavigator navigates to MainStack
-      if (skipName) setName('Guest');
+      if (skipName) setName(t('setup.guestName'));
     } catch {
-      showAlert('Error', 'Could not save your profile. Please try again.');
+      showAlert(t('common.error'), t('setup.saveError'));
     } finally {
       setSaving(false);
     }
@@ -142,10 +143,8 @@ export default function ProfileSetupScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headline}>Make it yours</Text>
-          <Text style={styles.subtitle}>
-            Your name and photo will appear on every card you share
-          </Text>
+          <Text style={styles.headline}>{t('setup.headline')}</Text>
+          <Text style={styles.subtitle}>{t('setup.subtitle')}</Text>
         </View>
 
         {/* Inputs — the primary, useful elements, placed high */}
@@ -175,16 +174,16 @@ export default function ProfileSetupScreen() {
                 </View>
               )}
             </View>
-            <Text style={styles.photoLabel}>ADD YOUR PHOTO</Text>
+            <Text style={styles.photoLabel}>{t('setup.addPhoto')}</Text>
           </View>
 
           {/* Name Input */}
           <View style={styles.inputWrapper}>
-            <Text style={styles.inputLabel}>YOUR NAME</Text>
+            <Text style={styles.inputLabel}>{t('setup.nameLabel')}</Text>
             <TextInput
               ref={nameRef}
               style={[styles.input, nameError && styles.inputError]}
-              placeholder="What should we call you?"
+              placeholder={t('setup.namePlaceholder')}
               placeholderTextColor="rgba(86,66,62,0.4)"
               value={nameInput}
               onChangeText={handleNameChange}
@@ -194,7 +193,7 @@ export default function ProfileSetupScreen() {
               onSubmitEditing={handleStartExploring}
             />
             {nameError && (
-              <Text style={styles.errorText}>Please enter your name to continue.</Text>
+              <Text style={styles.errorText}>{t('setup.nameError')}</Text>
             )}
           </View>
         </View>
@@ -205,12 +204,10 @@ export default function ProfileSetupScreen() {
           {!kbVisible && (
             <View style={styles.previewCard}>
                 <View style={styles.previewChip}>
-                  <Text style={styles.previewChipText}>PREVIEW</Text>
+                  <Text style={styles.previewChipText}>{t('setup.previewChip')}</Text>
                 </View>
                 <View style={styles.previewAccent} />
-                <Text style={styles.previewQuote}>
-                  "The beauty of belonging is that it transforms a space into a sanctuary."
-                </Text>
+                <Text style={styles.previewQuote}>{t('setup.previewQuote')}</Text>
                 <View style={styles.previewAuthorRow}>
                   <View style={styles.previewAvatar}>
                     {primaryPhotoUrl ? (
@@ -221,9 +218,9 @@ export default function ProfileSetupScreen() {
                   </View>
                   <View>
                     <Text style={styles.previewName}>
-                      {nameInput.trim() || 'Your Name'}
+                      {nameInput.trim() || t('setup.yourName')}
                     </Text>
-                    <Text style={styles.previewRole}>Kindred Spirit</Text>
+                    <Text style={styles.previewRole}>{t('setup.previewRole')}</Text>
                   </View>
                 </View>
             </View>
@@ -247,7 +244,7 @@ export default function ProfileSetupScreen() {
               {saving ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
-                <Text style={styles.primaryButtonText}>Start Exploring →</Text>
+                <Text style={styles.primaryButtonText}>{t('setup.startExploring')}</Text>
               )}
             </TouchableOpacity>
           </LinearGradient>
@@ -258,7 +255,7 @@ export default function ProfileSetupScreen() {
             activeOpacity={0.7}
             disabled={saving}
           >
-            <Text style={styles.skipButtonText}>Skip for now</Text>
+            <Text style={styles.skipButtonText}>{t('setup.skip')}</Text>
           </TouchableOpacity>
         </View>
       </View>
